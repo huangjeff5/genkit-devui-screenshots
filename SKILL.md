@@ -10,18 +10,20 @@ description: >-
 The Developer UI is Genkit's primary advantage over other frameworks, but our docs often describe complex runtime behaviors (tool loops, streaming, interrupts, evaluations) in abstract text without showing what the UI looks like.
 
 Your job is:
-1. Scan the docs to find open loops where a screenshot or short GIF closes a gap for a developer or coding agent.
-2. Stage the sample app and capture the shot on port 4104.
-3. Review old vs new with fresh eyes. Reject anything that requires explanation.
-4. Show the user only clean survivors in `compare.html`.
+1. Ensure `genkit-docsite` is up to date (`git pull origin main`).
+2. Scan the docs to find open loops where a screenshot or short GIF closes a gap for a developer or coding agent.
+3. Cleanly start/restart the sample app on isolated port 4104 and capture the shot.
+4. Review old vs new with fresh eyes. Reject anything that requires explanation.
+5. Show the user only clean survivors in `compare.html`.
 
 Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never land or copy assets until the user approves them.
 
 ---
 
-## Rules
+## Rules & Hygiene
 
-- **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**.
+- **Sync docs first**: Always pull `main` on `genkit-docsite` before auditing or editing.
+- **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**. Kill and restart stale 4104 processes if the sample app changed.
 - **Do not screenshot at scale 1**. Always use `device_scale_factor=2`, `color_scheme="dark"`, and viewport `1212x708`.
 - **Do not use full VertexAI() or GoogleAI() plugins**. Use the frozen `TinyVertex` in `sample/app.py` so only defined models appear.
 - **No UI junk**. Mask any `No app detected` text to `sample`, dismiss toasts, and keep the frame clean.
@@ -34,18 +36,21 @@ Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never la
 ## Running the pipeline
 
 ```bash
-# 1. Start the starter app on 4104 (if not already running)
+# 1. Ensure latest docsite main
+cd ~/Desktop/genkit-docsite && git pull origin main
+
+# 2. Start the starter app on 4104 (clean restart)
 export GENKIT_ENV=dev
 export GOOGLE_CLOUD_PROJECT=aim-testing
 cd ~/Desktop/genkit-docsite-shots/sample
 genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python app.py
 
-# 2. Stage traces + capture all shots + build overview GIF + generate compare.html
+# 3. Stage traces + capture all shots + build overview GIF + generate compare.html
 python3 ~/Desktop/genkit-devui-screenshots/scripts/capture_all.py \
   --base-url http://127.0.0.1:4104 \
   --out-dir ~/Desktop/genkit-docsite-shots/proposed
 
-# 3. Open comparison dashboard
+# 4. Open comparison dashboard
 open ~/Desktop/genkit-docsite-shots/proposed/compare.html
 ```
 
@@ -69,7 +74,11 @@ Any fail is a retake. Do not show failed shots.
 Once the user approves the shots in `compare.html`:
 
 ```bash
+# 1. Copy approved assets
 python3 ~/Desktop/genkit-devui-screenshots/scripts/sync_to_docsite.py \
   --shots-dir ~/Desktop/genkit-docsite-shots/proposed \
   --docsite-dir ~/Desktop/genkit-docsite
+
+# 2. Re-generate language pages and verify build
+cd ~/Desktop/genkit-docsite && pnpm generate-language-pages
 ```
