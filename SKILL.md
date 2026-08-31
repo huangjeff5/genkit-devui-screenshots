@@ -49,6 +49,8 @@ python3 "$REPO/scripts/batch1.py" \
 
 If the script prints `FAIL`, run it **once** more. If it fails again, stop and paste the FAIL lines. Do not fix by shooting a full page.
 
+The script writes `proposed/compare.html` (live docsite on the left, new on the right). That is what Jeff opens.
+
 ## Self-review (required, before Jeff sees anything)
 
 The script can tell you the crop is the right size. It cannot tell you the picture makes sense. You have to look.

@@ -11,6 +11,32 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 from playwright.sync_api import Page, sync_playwright
 
+OLD_URLS = {
+    'home': 'https://raw.githubusercontent.com/genkit-ai/docsite/main/src/assets/dev_ui/genkit_dev_ui_home.png',
+    'flow-runner': 'https://raw.githubusercontent.com/genkit-ai/docsite/main/src/assets/devui-flows.png',
+    'inspect': 'https://raw.githubusercontent.com/genkit-ai/docsite/main/src/assets/devui-inspect.png',
+    'runstep': 'https://raw.githubusercontent.com/genkit-ai/docsite/main/src/assets/devui-runstep.png',
+}
+
+COMPARE_HTML = """<!doctype html>
+<meta charset="utf-8" />
+<title>Batch 1 — live vs proposed</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 24px; font: 15px/1.45 ui-sans-serif, system-ui; background: #121316; color: #e3e2e6; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 6px; }
+  .lead { color: #b0b0b4; margin: 0 0 28px; }
+  section { margin: 0 0 48px; }
+  h2 { font-size: 16px; font-weight: 600; margin: 0 0 8px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  figure { margin: 0; }
+  figcaption { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: #9aa0a6; margin: 0 0 8px; }
+  img { width: 100%; background: #0d0e11; border: 1px solid #2f3033; border-radius: 8px; display: block; }
+</style>
+<h1>Batch 1 — live docsite vs proposed</h1>
+<p class="lead">Left is what genkit.dev ships today. Right is the new capture.</p>
+"""
+
 SIZES = {
     'home': ((2400, 2900), (1700, 2000)),
     'flow-runner': ((2380, 2460), (1380, 1450)),
@@ -235,6 +261,32 @@ def vet(out: Path, texts: dict[str, str]) -> bool:
     return ok
 
 
+def fetch_old(out: Path) -> None:
+    dest = out / 'old'
+    dest.mkdir(parents=True, exist_ok=True)
+    for sid, url in OLD_URLS.items():
+        path = dest / f'{sid}.png'
+        if path.exists() and path.stat().st_size > 1000:
+            continue
+        with urllib.request.urlopen(url, timeout=30) as r:
+            path.write_bytes(r.read())
+        print('old', path.name, path.stat().st_size)
+
+
+def write_compare(out: Path) -> Path:
+    parts = [COMPARE_HTML]
+    for sid in ('home', 'flow-runner', 'inspect', 'runstep'):
+        parts.append(
+            f'<section><h2>{sid}</h2><div class="pair">'
+            f'<figure><figcaption>Live</figcaption><img src="old/{sid}.png" alt="live {sid}" /></figure>'
+            f'<figure><figcaption>Proposed</figcaption><img src="{sid}.png" alt="proposed {sid}" /></figure>'
+            f'</div></section>\n'
+        )
+    path = out / 'compare.html'
+    path.write_text(''.join(parts))
+    return path
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument('--base-url', default='http://127.0.0.1:4104')
@@ -250,10 +302,13 @@ def main() -> None:
     }
     run_flow(base, '/flow/menuSuggestionFlow', {'theme': 'medieval'})
 
+    fetch_old(out)
     texts = capture(base, out, traces)
+    compare = write_compare(out)
     if not vet(out, texts):
         raise SystemExit('FAIL: size or text gate. Run once more. Do not dump a full page.')
-    print('SIZE GATES PASSED. Now look at old vs new pixels. Hesitate = reject.')
+    print(f'SIZE GATES PASSED. Look at old vs new in {compare}')
+    print('Then open that file for Jeff. Hesitate = reject.')
 
 
 if __name__ == '__main__':

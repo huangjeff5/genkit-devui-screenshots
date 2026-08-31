@@ -25,3 +25,7 @@ git clone https://github.com/jeffdh5/genkit-devui-screenshots.git \
 ```
 
 Then follow `SKILL.md`. Set `REPO` to that clone.
+
+## What “done” looks like
+
+The agent opens `~/Desktop/genkit-docsite-shots/proposed/compare.html` and gives four one-liners. You vet with `ok` / `retake` / `skip gif`. They do not land or PR until you say so.
