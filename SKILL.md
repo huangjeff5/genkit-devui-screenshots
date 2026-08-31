@@ -1,75 +1,63 @@
 ---
 name: genkit-devui-screenshots
 description: >-
-  Capture Genkit Developer UI screenshots and animated GIFs for the genkit-ai/docsite,
-  generate interactive visual diffs in compare.html, and sync approved assets to docsite.
-  Use when the user mentions docsite screenshots, Dev UI screenshots, Developer UI pictures,
-  "vet the shots", updating genkit.dev images of the local UI, or running the screenshot pipeline.
+  Audit Genkit documentation, discover high-impact Dev UI "Aha!" moment opportunities,
+  capture visual proof (GIFs & high-DPI screenshots), and propose doc updates for PM review.
+  Use when the user asks to "audit docs for Dev UI opportunities", "find aha moments",
+  "propose new screenshots/gifs", "vet the shots", or "update docsite images".
 ---
 
-# Dev UI Docsite Screenshots & Visual Proof Pipeline
+# Dev UI Docsite Opportunity Scout & Visual Proof Pipeline
 
-A deterministic, one-command pipeline that stages traces on a frozen sample app, captures 2x Retina screenshots and Lanczos palette GIFs across all Genkit primitives, builds an interactive visual diff dashboard (`compare.html`), and syncs approved assets into `genkit-docsite`.
-
-Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite).
-
----
-
-## 🚫 Critical Rules
-
-- **Do not touch port 4000**: That is a user's persistent UI. The screenshot UI runs on isolated port **4104**.
-- **Do not screenshot at scale 1**: Always capture at `device_scale_factor=2` with `color_scheme="dark"` and `viewport={"width": 1212, "height": 708}`.
-- **Do not introduce catalog junk**: Use the frozen `TinyVertex` in `sample/app.py` so only defined models appear.
-- **Clean frame requirement**: Mask any `No app detected` chips to `sample`, dismiss transient toast overlays, and verify trace timelines before capturing.
+An intelligent, autonomous system for continuously scanning Genkit documentation, identifying high-leverage opportunities to showcase the Developer UI ("secret sauce"), generating live sample fixtures to capture the visual proof, and presenting rich in-situ proposals for PM approval.
 
 ---
 
-## 🚀 One-Command Execution
+## 🎯 The Core Mission: Finding "Aha!" Moments
 
-```bash
-# REPO is this clone, e.g. ~/Desktop/genkit-devui-screenshots
+Do not just refresh existing images. Actively audit the documentation to find where showing the Dev UI creates a high-value breakthrough for developers and coding agents:
 
-# 1. Stage and run the frozen starter on port 4104 (if not already running)
-mkdir -p ~/Desktop/genkit-docsite-shots/sample
-cp "$REPO/sample/app.py" ~/Desktop/genkit-docsite-shots/sample/app.py
-
-export GENKIT_ENV=dev
-export GOOGLE_CLOUD_PROJECT=aim-testing
-cd ~/Desktop/genkit-docsite-shots/sample
-genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python app.py
-
-# 2. Run the unified capture engine (stages traces, captures all 15 assets, builds GIF & compare.html)
-python3 "$REPO/scripts/capture_all.py" \
-  --base-url http://127.0.0.1:4104 \
-  --out-dir ~/Desktop/genkit-docsite-shots/proposed
-
-# 3. Open the visual review dashboard
-open ~/Desktop/genkit-docsite-shots/proposed/compare.html
-```
+1. **Closing Open Loops**: When docs explain a complex lifecycle (e.g. multi-turn tool loops, human-in-the-loop interrupts, recursive delegation), capture the trace waterfall that *proves* it visually.
+2. **Eliminating Abstraction**: When docs describe typed schemas or configuration options, capture the auto-generated GUI forms and dynamic variable previewers.
+3. **Format Decision Rubric**:
+   - **🎬 Animated GIF (3–8s, Lanczos palette)**: For real-time streaming, pause/resume interrupt forms, parameter slider testing, or expandable trace trees.
+   - **📸 Static Screenshot (2x Retina, Dark Mode)**: For structural data, schema validation trees, multi-span latency waterfalls, and correlated log streams.
 
 ---
 
-## 🔍 Self-Review Rubric (Required Before Sharing)
+## 🚫 Critical Guardrails
 
-For every captured asset, inspect the pixels against the 4 criteria:
-
-| # | Criterion | Rule |
-| :--- | :--- | :--- |
-| 1 | **The Beat** | Can a developer understand the core feature in 2 seconds without reading a caption? |
-| 2 | **No Junk** | Zero transient error toasts, clean trace timelines, no `No app detected` text, no empty tabs. |
-| 3 | **The Crop** | Standard 1212x708 frame, high-DPI (2x Retina), consistent dark mode padding. |
-| 4 | **Vs Old** | The proposed capture must be strictly higher information density and cleaner than the live docsite baseline. |
+- **Never touch port 4000**: That is a user's persistent UI. Always use isolated port **4104**.
+- **Never screenshot at scale 1**: Always use `device_scale_factor=2`, `color_scheme="dark"`, and standard viewport `1212x708`.
+- **Zero catalog clutter**: Use isolated model fixtures (e.g. `TinyVertex`) so only the relevant models appear.
+- **Clean frame requirement**: Mask `No app detected` text to `sample` and ensure zero transient error toasts.
 
 ---
 
-## 📦 Syncing Approved Assets to Docsite
+## 🔄 The Autonomous Execution Loop
 
-Once the PM approves the shots in `compare.html`:
+When a user asks to audit docs or propose new Dev UI features:
 
-```bash
-python3 "$REPO/scripts/sync_to_docsite.py" \
-  --shots-dir ~/Desktop/genkit-docsite-shots/proposed \
-  --docsite-dir ~/Desktop/genkit-docsite
-```
+### Step 1: Scan & Identify Opportunities
+- Audit `genkit-docsite/src/content/docs/docs/` for sections explaining abstract concepts without visual UI grounding.
+- For each opportunity, define the exact code sample and matching Dev UI state.
 
-Then commit and push the updated docsite branch.
+### Step 2: Build Fixture & Trigger State
+- Add the necessary flow, tool, prompt, or evaluator to `sample/app.py`.
+- Run the flow with `GENKIT_TELEMETRY_SERVER=http://127.0.0.1:4033` to populate realistic trace telemetry.
+
+### Step 3: Capture Visual Proof
+- Run Playwright to capture 2x Retina screenshots or record video $\rightarrow$ convert with `ffmpeg` palettegen into a clean GIF.
+- Save assets to `~/Desktop/genkit-docsite-shots/proposed/`.
+
+### Step 4: Build In-Situ PM Comparison Studio
+- Generate `~/Desktop/genkit-docsite-shots/proposed/compare.html` showing:
+  - The animated GIFs and high-res screenshots.
+  - The side-by-side code $\leftrightarrow$ UI pairing.
+  - A realistic preview of how the doc page will look with the asset embedded.
+- Open `compare.html` in the user's default browser.
+
+### Step 5: Slot into Docsite upon Approval
+- When the PM approves specific proposals, copy the assets to `genkit-docsite/src/assets/` or `genkit-docsite/public/`.
+- Update the target `.mdx` doc files with appropriate markdown embeds and explanatory context.
+- Run `pnpm dev` in `genkit-docsite` to let the PM preview the live documentation site.
