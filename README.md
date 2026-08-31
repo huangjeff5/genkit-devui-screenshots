@@ -1,24 +1,35 @@
-# Genkit Dev UI docsite screenshots & opportunity scout
+# Genkit Dev UI docsite screenshots & visual engineering playbook
 
-Tooling and workflow for discovering opportunities to highlight the Genkit Developer UI, capturing high-DPI screenshots and GIFs, and creating high-clarity PRs with full in-situ docsite previews.
+Comprehensive tooling and operational playbook for auditing the Genkit documentation, capturing high-DPI Developer UI proof artifacts across complex runtime scenarios, and submitting zero-noise GitHub PRs with full in-situ previews.
 
 ---
 
 ## Why this exists
 
-1. **Dev UI is tribal knowledge**: The core team uses the local Developer UI continuously for rapid testing and trace debugging, but our documentation often fails to show external developers (and autonomous coding agents) that this exists out of the box.
-2. **Abstract documentation**: Explaining recursive tool calling, human-in-the-loop pauses, or structured streaming with text alone leaves open loops. Showing the runtime trace closes the loop.
-3. **Competitive advantage**: Other frameworks require external cloud platforms or paid dashboards to inspect traces. Genkit provides a zero-config local UI.
-4. **Agent explainability**: Coding agents reading the docs can use visual artifacts to help developers verify agent behavior on specific tabs and spans.
-5. **Zero-friction execution**: Anyone on the team can trigger audits, captures, and doc updates directly through natural language in Jetski without manually wiring up scripts or local test harnesses.
+1. **Dev UI is tribal knowledge**: The core team uses the Developer UI daily for rapid prototyping and trace debugging, but docs often fail to show external developers (and autonomous coding agents) that this exists out of the box.
+2. **Closing conceptual loops**: Explaining recursive tool loops, agentic human interrupts, or scored evaluations with text alone leaves open loops. Visual proof closes the loop.
+3. **Zero-overhead review**: PR descriptions embed full 1440×900 in-situ viewport previews hosted externally, allowing reviewers to verify typography, margins, and placement in 60 seconds without checking out branches or running Astro locally.
+4. **Decoupled architecture**: Preview assets live in this public repository (`previews/`), keeping the target `genkit-ai/docsite` changeset 100% clean.
 
 ---
 
-## Jetski prompts (copy & paste)
+## Scenario Catalog
 
-Paste these into chat to run the workflow:
+This playbook is tuned for the full spectrum of Genkit capabilities:
 
-### 1. Audit docs for new Dev UI opportunities
+- **Recursive Tool Calling**: Nested trace trees showing `generate` $\rightarrow$ `tool(1ms)` $\rightarrow$ model synthesis.
+- **Standalone Tool Runner**: Auto-generated GUI forms populated directly from Zod and Pydantic schemas.
+- **Live Token Streaming**: 12 fps Lanczos-palette animated GIFs capturing real-time token streaming.
+- **Human-in-the-Loop Interrupts**: Paused flow states with resumption forms and approval actions.
+- **Dotprompt Engineering**: Real-time Handlebars variable resolution with typed schema form inputs.
+- **Evaluations & Scoring**: LLM-as-a-judge results matrices, metric breakdowns, and dataset inspection.
+- **Custom Step Telemetry**: Isolated `ai.run()` execution spans nested inside parent flow traces.
+
+---
+
+## Copy-Paste Jetski Prompts
+
+### 1. Full Documentation Opportunity Scout
 ```text
 Audit our documentation and look for high-impact opportunities where showcasing the Genkit Dev UI will create "aha!" moments or close open loops for developers.
 
@@ -30,60 +41,31 @@ For any page that could benefit from visual proof:
 5. Open compare.html showing the proposed images/GIFs embedded alongside the matching doc text so I can review them.
 ```
 
-### 2. Audit a specific page or PR
+### 2. Audit a Specific Page or Concept
 ```text
 Analyze docs/agents/interrupts.mdx. Find where developers will have questions about what the UI looks like, capture the Dev UI in that exact state (as a GIF or screenshot), and show me a proposal with full 1440x900 in-situ viewport previews in compare.html.
 ```
 
-### 3. Approve and open PR
+### 3. Approve and Open PR
 ```text
 I like proposals #1, #2, and #4 from compare.html. Please slot those screenshots/GIFs and text adjustments into the docsite branch, push the 1440x900 in-situ preview cards to huangjeff5/genkit-devui-screenshots/previews/, and open a PR with the in-situ screenshots embedded in the PR description only (keeping the docsite git diff 100% clean).
 ```
 
-### 4. Retake or adjust a shot
-```text
-The shots look good except for "inspect". Please retake that shot with the getDishDetails span selected in the waterfall tree so its input/output payload drawer is visible, and refresh compare.html.
-```
+---
+
+## Execution Standards
+
+- **Resolution & Scaling**: All screenshots captured at `device_scale_factor=2`, dark theme, `1212x708` standard workspace size.
+- **GIF Optimization**: 12 fps, Lanczos color palette generation with Bayer dithering for smooth streaming playback under 3 MB.
+- **Intelligent Bounding**: Snap to DOM elements (`mat-drawer-content`, `mat-tree`) to guarantee zero sliced dividers, border lines, or perimeter artifacts.
+- **Fresh-Eyes QA Subagent**: Every batch is audited by an adversarial visual QA subagent before submitting PRs.
 
 ---
 
-## Visual PR Standards
+## Repository Structure
 
-- **Full 1440x900 In-Situ Viewports**: Always capture the complete 3-column layout (left nav + content + right TOC) on the running docsite so reviewers can verify sizing and reading flow at a glance without zooming.
-- **PR Description ONLY**: In-situ docsite preview cards are hosted in this public repository (`previews/`) and embedded in the PR body. They must **never** be committed to the target `genkit-ai/docsite` repository branch.
-- **2-Minute Approvals**: Reviewers must be able to inspect all visual diffs and in-situ layouts directly on GitHub without checking out the branch.
-
----
-
-## Format decision
-
-- **GIF** (3–8s loop, 12 fps, Lanczos): real-time streaming, pause/resume interrupts, parameter slider testing, or expandable trace trees. Examples: interactive flow tour, live prompt variable resolution, multi-agent trace tree.
-- **Screenshot** (PNG, 2x Retina): structural JSON, schema forms, multi-span latency waterfalls, or evaluation scoreboards. Examples: tool runner input form, tool trace waterfall, evaluation result matrix.
-
----
-
-## Repo structure
-
-- `README.md`: Playbook, visual PR standards & copy-paste Jetski prompts.
-- `SKILL.md`: Jetski skill definition, guardrails, and review rubric.
-- `sample_app.py`: Frozen starter app with models, flows, tools, and prompts.
-- `capture.py`: Playwright capture engine, ffmpeg GIF generator, and in-situ viewport capturer.
+- `README.md`: Scenario catalog, engineering principles & copy-paste prompts.
+- `SKILL.md`: Autonomous agent instructions, DOM cropping invariants, and review rubric.
+- `sample_app.py`: Frozen starter app with models, flows, tools, prompts, and traces.
+- `capture.py`: Automated Playwright capture engine, ffmpeg GIF converter, and in-situ viewport generator.
 - `previews/`: Hosted full-page in-situ viewport screenshots for PR descriptions.
-
----
-
-## Manual CLI usage
-
-```bash
-# 1. Start the sample app on port 4104
-export GENKIT_ENV=dev
-export GOOGLE_CLOUD_PROJECT=aim-testing
-cd ~/Desktop/genkit-devui-screenshots
-genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
-
-# 2. Run capture pipeline + full in-situ viewport capture
-python3 capture.py --base-url http://127.0.0.1:4104 --docsite-url http://localhost:4321
-
-# 3. Open review dashboard
-open ~/Desktop/genkit-docsite-shots/proposed/compare.html
-```

@@ -2,75 +2,98 @@
 name: genkit-devui-screenshots
 description: >-
   Audit Genkit docs for Dev UI opportunities, capture visual proof (GIFs and high-DPI screenshots)
-  with intelligent DOM-anchored cropping, and compose GitHub PRs with 1440x900 in-situ previews.
+  across complex runtime scenarios (tool loops, streaming, interrupts, evaluations, prompts), and compose
+  GitHub PRs with 1440x900 in-situ previews.
 ---
 
-# Dev UI docsite screenshots & visual PR pipeline
+# Genkit Dev UI visual verification & docsite pipeline
 
-The Developer UI is Genkit's primary advantage over other frameworks, but our docs often describe complex runtime behaviors (tool loops, streaming, interrupts, evaluations) in abstract text without showing what the UI looks like.
+The Developer UI is Genkit's primary advantage over other frameworks: a zero-config, local workbench for interactive execution, trace inspection, prompt engineering, and evaluation. However, documentation often explains complex runtime dynamics in abstract prose without showing developers what the UI looks like in real-world scenarios.
 
-Your job is:
-1. Scan the docs to find open loops where a screenshot or short GIF closes a gap for a developer or coding agent.
-2. Cleanly start/restart the sample app on isolated port 4104 and capture the Dev UI assets.
-3. Automatically apply intelligent DOM-anchored cropping to eliminate edge artifacts.
-4. Capture full 1440x900 in-situ docsite viewport screenshots on the running local docsite (`http://localhost:4321`).
-5. Push in-situ preview cards to `huangjeff5/genkit-devui-screenshots/previews/`.
-6. Compose the GitHub PR using `gh pr create` with the in-situ screenshots embedded in the PR description ONLY. Never include preview cards in the target docsite changeset.
+This skill governs the end-to-end pipeline: auditing documentation gaps, generating deterministic runtime fixtures, capturing pixel-perfect assets with DOM-anchored cropping, validating layouts with fresh-eyes visual QA, and generating 2-minute review PRs.
 
 ---
 
-## Intelligent Cropping Standards (One-Shot Execution)
+## 1. Scenario Catalog & Scenario-Specific Heuristics
 
-To guarantee zero human intervention on cropping, always enforce these 4 mathematical invariants:
+When auditing documentation or generating visual assets, match each concept to its tuned capture heuristic:
 
-1. **Full Workbench vs. Isolated Subview**:
-   - **Full Workbench Views** (`home`, `flow-runner`, `model-runner`, `prompt-runner`): Capture the full `1212x708` viewport with 2x Retina scaling.
-   - **Trace Inspector Views** (`inspect`): Snap cleanly to the workbench root (`mat-drawer-content` / `x: 290..1212`). Never include a partial slice of the left navigation sidebar or its bottom collapse chevron.
-   - **Isolated Tree Subviews** (`runstep`): Anchor to the tree container (`x: 270`, `y: 47`, `width: 304`, `height: 220`).
-2. **Top Header Invariant**:
-   - Header bars must include the entire top container block (`y: 47` in trace trees), providing 16–20px of breathing room above chevrons and icons. Never slice through top icons or text ascenders.
-3. **Right Perimeter Invariant**:
-   - Trace tree cards must end cleanly after the rightmost status badge/checkmarks (`width: 304`), terminating before the vertical panel divider line. Never include 1–2px line fragments or sliced text from the adjacent panel.
-4. **Bottom Padding Invariant**:
-   - Provide a minimum of 16px padding below the final child leaf node.
+### A. Recursive Tool Calling & Multi-Turn Loops
+- **The Concept**: LLM emits a tool call, Genkit executes the local function, and feeds results back to the model for final synthesis.
+- **Visual Goal**: Show the nested trace tree demonstrating the sequence (`generate` $\rightarrow$ `tool (1ms)` $\rightarrow$ `generate`).
+- **Capture Technique**:
+  - Standalone Tool Runner: Capture the auto-generated input schema form (`/tools/<toolName>`).
+  - Waterfall Loop: Click the root flow trace, expand all child spans, select the tool execution span to display input parameters and output payload in the right drawer.
+
+### B. Live Token Streaming
+- **The Concept**: Real-time chunk delivery over HTTP/SSE.
+- **Visual Goal**: Provide dynamic proof of streaming latency and chunk progression.
+- **Capture Technique**:
+  - Animated GIF (12 fps, Lanczos palette, 3–5s loop). Record the Flow Runner executing with the "Run" button clicked, showing chunks streaming into the response area.
+
+### C. Human-in-the-Loop Interrupts & Agentic Pauses
+- **The Concept**: Agents pausing execution to request external human approval or user clarification before proceeding.
+- **Visual Goal**: Show the flow in the `INTERRUPTED` state with the resume input field and "Resume flow" action button.
+- **Capture Technique**:
+  - Trigger an interrupt with structured state. Capture the Flow Runner showing the active suspension banner and pending input payload form.
+
+### D. Dotprompt & Dynamic Variable Resolution
+- **The Concept**: Template files (`.prompt`) with frontmatter metadata, Pydantic/Zod input schemas, and Handlebars variables.
+- **Visual Goal**: Show real-time variable binding and template rendering.
+- **Capture Technique**:
+  - Open `/prompts/<promptName>`. Fill the schema form with realistic domain data (e.g., customer reservations, menu preferences) and capture with dynamic variables rendered.
+
+### E. Evaluations & LLM-as-a-Judge Scoreboards
+- **The Concept**: Automated testing of model outputs against gold-standard datasets using rubric evaluators.
+- **Visual Goal**: Demonstrate dataset management, evaluator execution, and the scored results matrix.
+- **Capture Technique**:
+  - Navigate to `/evaluations`. Display a populated evaluation run showing metric columns (`answer_relevancy`, `faithfulness`, `latency`) with pass/fail badges and score distributions.
+
+### F. Custom Step Telemetry (`ai.run`)
+- **The Concept**: Wrapping custom business logic (database queries, external API calls, vector search) to make it observable in traces.
+- **Visual Goal**: Show custom named spans nested cleanly inside the parent flow trace.
+- **Capture Technique**:
+  - Use isolated tree crop (`x: 270, y: 47, width: 304, height: 220`) showing the custom step with its exact execution time (e.g. `retrieve-daily-menu  1ms [✓]`).
 
 ---
 
-## Running the pipeline
+## 2. Intelligent DOM-Anchored Cropping Standards
 
-```bash
-# 1. Start the starter app on 4104 (clean restart)
-export GENKIT_ENV=dev
-export GOOGLE_CLOUD_PROJECT=aim-testing
-cd ~/Desktop/genkit-devui-screenshots
-genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
+To ensure 100% one-shot execution without edge bleeding or awkward perimeter slices, enforce these mathematical bounding rules:
 
-# 2. Run intelligent capture engine + build overview GIF + capture 1440x900 in-situ views
-python3 ~/Desktop/genkit-devui-screenshots/capture.py \
-  --base-url http://127.0.0.1:4104 \
-  --docsite-url http://localhost:4321 \
-  --out-dir ~/Desktop/genkit-docsite-shots/proposed
+1. **Full Workbench Views** (`home`, `flow-runner`, `model-runner`, `prompt-runner`):
+   - Capture full `1212x708` viewport with `device_scale_factor=2` and `color_scheme="dark"`.
+2. **Workbench Inspector Views** (`inspect`):
+   - Snap cleanly to `mat-drawer-content` (`x: 290..1212`, `y: 0..708`), completely excluding the left navigation sidebar and bottom collapse chevron.
+3. **Isolated Tree Subviews** (`runstep`):
+   - Snap to the tree container (`x: 270`, `y: 47`, `width: 304`, `height: 220`). Includes full dark gray header block (20px top breathing room) and ends before the vertical panel divider line.
+4. **Zero Edge Artifacts Invariant**:
+   - Outer 10px perimeter must never contain sliced border lines, 1px divider fragments, or cut-off text glyphs.
 
-# 3. Open comparison dashboard
-open ~/Desktop/genkit-docsite-shots/proposed/compare.html
+---
+
+## 3. Fresh-Eyes Visual QA Subagent Protocol
+
+Before opening or updating a PR, the agent invokes an adversarial Visual QA Subagent with a fresh context window to audit all PNGs in `previews/`:
+
+```text
+Role: Visual QA & Staff Design Reviewer
+Task: Inspect all generated screenshot PNGs and in-situ 1440x900 viewport captures in `previews/` using `view_file`.
+
+Audit each image against these 4 strict criteria:
+1. Perimeter & Crop Slicing: Check the outer 10px perimeter of every cropped card. Reject if there are cut-off divider lines, adjacent panel slivers, stray 1px borders, or partial background bleeding.
+2. Icon & Label Integrity: Confirm green checkmarks, latency badges (e.g., 1ms, 2.23s), and function names are 100% intact with comfortable padding.
+3. Zero Unpopulated Artifacts: Verify that no "No app detected" strings, blank JSON inputs, or uninitialized spinners appear.
+4. In-Situ Docsite Flow (1440x900): Inspect the docsite context image. Verify that the image width, typography, and vertical spacing integrate smoothly with the documentation text without overpowering the column.
+
+Return a pass/fail verdict with exact pixel/coordinate adjustments for any failures.
 ```
 
 ---
 
-## Fresh-Eyes Visual QA Subagent Protocol
+## 4. PR Formatting & Changeset Cleanliness
 
-Before opening or updating a PR, the agent invokes an adversarial Visual QA Subagent to audit all PNGs in `previews/` against 4 criteria:
-
-1. **Perimeter & Crop Slicing**: Inspect the outer 10px perimeter of every card. Reject if there are cut-off divider lines, adjacent panel slivers, stray 1px borders, or partial background bleeding.
-2. **Icon & Label Integrity**: Confirm green checkmarks, latency badges (e.g., `1ms`, `2.23s`), and function names are 100% intact with comfortable padding.
-3. **Zero Unpopulated Artifacts**: Verify that no "No app detected" strings, blank JSON inputs, or uninitialized spinners appear.
-4. **In-Situ Docsite Flow (1440x900)**: Inspect the docsite context image. Verify that the image width, typography, and vertical spacing integrate smoothly with the documentation text without overpowering the column.
-
----
-
-## PR Creation Checklist
-
-- [ ] Target branch contains ONLY the modified `.mdx` files and legitimate `src/assets/` images (0 preview card files).
-- [ ] In-situ viewport screenshots (1440x900) pushed to `huangjeff5/genkit-devui-screenshots/previews/`.
-- [ ] PR description embeds the in-situ viewports and Before vs. After comparison tables via public raw GitHub URLs.
-- [ ] `pnpm generate-language-pages` run and verified with 0 errors.
+When submitting pull requests to `genkit-ai/docsite`:
+- **Target Branch Git Diff**: Must contain ONLY modified `.mdx` guides and legitimate `src/assets/` images. Zero preview cards or test scripts.
+- **In-Situ Viewports (1440x900)**: Pushed to `huangjeff5/genkit-devui-screenshots/previews/` and embedded into the PR description via public `raw.githubusercontent.com` URLs.
+- **2-Minute Approval Guarantee**: Reviewers must see the real docsite context and before/after diffs directly inside GitHub without checking out the branch.
