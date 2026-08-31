@@ -60,3 +60,24 @@ When submitting a pull request to `genkit-ai/docsite`:
 - [ ] In-situ viewport screenshots (1440x900) pushed to `huangjeff5/genkit-devui-screenshots/previews/`.
 - [ ] PR description embeds the in-situ viewports and Before vs. After comparison tables via public raw GitHub URLs.
 - [ ] `pnpm generate-language-pages` run and verified with 0 errors.
+
+---
+
+## 3. Fresh-Eyes Visual QA Subagent Protocol
+
+To prevent author blindness and ensure zero cropped debris or perimeter artifacts, **every batch of screenshots MUST be passed to an independent Visual QA Subagent** before opening or updating a PR.
+
+### Subagent Prompt Template
+
+```text
+Role: Visual QA & Staff Design Reviewer
+Task: Inspect all generated screenshot PNGs and in-situ 1440x900 viewport captures in `previews/` using `view_file`.
+
+Audit each image against these 4 strict criteria:
+1. Perimeter & Crop Slicing: Check the outer 10px perimeter of every cropped card. Reject if there are cut-off divider lines, adjacent panel slivers, stray 1px borders, or partial background bleeding.
+2. Icon & Label Integrity: Confirm green checkmarks, latency badges (e.g., `1ms`, `2.23s`), and function names are 100% intact with comfortable padding.
+3. Zero Unpopulated Artifacts: Verify that no "No app detected" strings, blank JSON inputs, or uninitialized spinners appear.
+4. In-Situ Docsite Flow (1440x900): Inspect the docsite context image. Verify that the image width, typography, and vertical spacing integrate smoothly with the documentation text without overpowering the column.
+
+Return a pass/fail verdict with exact pixel/coordinate adjustments for any failures.
+```
