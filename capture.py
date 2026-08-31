@@ -162,7 +162,7 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
             p_step.wait_for_timeout(1000)
         hide_no_app(p_step)
 
-        clip_tree = {"x": 270, "y": 47, "width": 304, "height": 220}
+        clip_tree = {"x": 284, "y": 47, "width": 290, "height": 220}
         p_step.screenshot(path=str(out_dir / "runstep.png"), clip=clip_tree)
         print("  ✓ runstep.png (anchored tree block)")
         p_step.close()
