@@ -26,10 +26,11 @@ Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never la
 ## Run this
 
 ```bash
+# REPO is this clone, e.g. ~/src/genkit-devui-screenshots
+
 # 1. Copy the frozen starter (overwrite, do not edit)
 mkdir -p ~/Desktop/genkit-docsite-shots/sample
-cp ~/.cursor/skills/genkit-devui-screenshots/sample/app.py \
-   ~/Desktop/genkit-docsite-shots/sample/app.py
+cp "$REPO/sample/app.py" ~/Desktop/genkit-docsite-shots/sample/app.py
 
 # 2. If nothing is on 4104, start the frozen starter. Do not touch 4000.
 #    Reuse 4104 if it is already this sample (Flows 3, Models 2).
@@ -38,10 +39,10 @@ export GENKIT_ENV=dev
 export GOOGLE_CLOUD_PROJECT=aim-testing
 cd ~/Desktop/genkit-docsite-shots/sample
 # only if 4104 is free:
-# genkit start -p 4104 -- <repo>/py/.venv/bin/python app.py
+# genkit start -p 4104 -- <genkit-py-venv>/python app.py
 
 # 3. Stage traces + capture + vet. One command.
-python3 ~/.cursor/skills/genkit-devui-screenshots/scripts/batch1.py \
+python3 "$REPO/scripts/batch1.py" \
   --base-url http://127.0.0.1:4104 \
   --out-dir ~/Desktop/genkit-docsite-shots/proposed
 ```

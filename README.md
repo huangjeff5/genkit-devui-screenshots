@@ -21,7 +21,7 @@ No pictures in this repo. Captures land on the machine at `~/Desktop/genkit-docs
 
 ```bash
 git clone https://github.com/jeffdh5/genkit-devui-screenshots.git \
-  ~/.cursor/skills/genkit-devui-screenshots
+  ~/src/genkit-devui-screenshots
 ```
 
-Then follow `SKILL.md`.
+Then follow `SKILL.md`. Set `REPO` to that clone.
