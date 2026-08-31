@@ -1,16 +1,33 @@
 #!/usr/bin/env python3
-"""Unified production runner: stages traces, captures all Dev UI shots, builds GIF, and generates compare.html."""
+"""Capture Dev UI screenshots, build animated overview GIF, and generate compare.html."""
 
 import argparse
-import json
 import os
 import subprocess
 import time
 from pathlib import Path
 from playwright.sync_api import Page, sync_playwright
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-REGISTRY_FILE = REPO_ROOT / "registry.json"
+REPO_ROOT = Path(__file__).resolve().parent
+
+SHOTS = [
+    ("home", "Home dashboard showing healthy runtime and recent trace timeline", "png"),
+    ("flow-runner", "Flow runner interface with JSON payload input and Run action", "png"),
+    ("inspect", "Trace waterfall inspector for multi-step AI workflow", "png"),
+    ("runstep", "ai.run step telemetry row isolated within execution trace", "png"),
+    ("model-runner", "Model runner with direct prompt input and configuration drawer", "png"),
+    ("prompt-runner", "Prompt runner with live testing and configuration parameters", "png"),
+    ("traces", "Traces observatory table with durations, statuses, and token metrics", "png"),
+    ("datasets", "Datasets overview list for evaluation datasets", "png"),
+    ("dataset-create", "Create dataset modal form", "png"),
+    ("dataset-examples", "Dataset examples table with validated JSON queries", "png"),
+    ("eval-run", "Run new evaluation configuration dialog", "png"),
+    ("eval-results", "Evaluation run results matrix with metrics and LLM judge reasoning", "png"),
+    ("devui_tool_runner_standalone", "Standalone tool runner with auto-generated schema form", "png"),
+    ("trace_tool_call_waterfall_loop", "Multi-turn tool call waterfall trace (model -> tool -> model)", "png"),
+    ("dotprompt_runner_live_variables", "Dotprompt runner with live dynamic variables and resolved preview", "png"),
+    ("genkit_developer_ui_overview", "Interactive overview tour showing real-time token streaming and trace slide-over", "gif"),
+]
 
 def hide_no_app(page: Page) -> None:
     page.evaluate(
@@ -69,7 +86,7 @@ def run_capture(base_url: str, out_dir: Path, python_bin: str):
         def new_page():
             return context.new_page()
 
-        print("\n📸 Capturing Batch 1 & Batch 2 Primitives...")
+        print("\n📸 Capturing Dev UI screenshots...")
 
         # 1. Home
         p_home = new_page()
@@ -134,7 +151,7 @@ def run_capture(base_url: str, out_dir: Path, python_bin: str):
         print("  ✓ model-runner.png")
         p_mod.close()
 
-        # 6. Prompt Runner (Hello)
+        # 6. Prompt Runner
         p_pr = new_page()
         p_pr.goto(f"{base_url}/prompts/hello", wait_until="domcontentloaded")
         p_pr.get_by_text("hello").first.wait_for(timeout=15000)
@@ -208,8 +225,6 @@ def run_capture(base_url: str, out_dir: Path, python_bin: str):
         print("  ✓ eval-results.png")
         p_evres.close()
 
-        print("\n⚡ Capturing New Proof Shots (Tools & Dotprompt)...")
-
         # 13. Standalone Tool Runner
         p_tl = new_page()
         p_tl.goto(f"{base_url}/tools/getDishDetails", wait_until="domcontentloaded")
@@ -254,14 +269,11 @@ def run_capture(base_url: str, out_dir: Path, python_bin: str):
 
         browser.close()
 
-    # Generate Animated GIF
     generate_overview_gif(base_url, out_dir)
-
-    # Build Interactive HTML Comparison Dashboard
     build_compare_html(out_dir)
 
 def generate_overview_gif(base_url: str, out_dir: Path):
-    print("\n🎬 Generating High-Framerate Overview GIF...")
+    print("\n🎬 Generating overview GIF...")
     raw_video_dir = out_dir / "raw_video"
     raw_video_dir.mkdir(parents=True, exist_ok=True)
 
@@ -282,7 +294,6 @@ def generate_overview_gif(base_url: str, out_dir: Path):
         page.get_by_role("button", name="Run").click()
         page.wait_for_timeout(3200)
 
-        # Slide over to trace
         view_trace_btn = page.get_by_text("View trace").or_(page.get_by_role("button", name="View trace")).first
         if view_trace_btn.count():
             view_trace_btn.click()
@@ -320,11 +331,7 @@ def generate_overview_gif(base_url: str, out_dir: Path):
     print(f"  ✓ {gif_path.name} ({gif_path.stat().st_size // 1024} KB)")
 
 def build_compare_html(out_dir: Path):
-    print("\n📄 Building Interactive compare.html...")
-    if not REGISTRY_FILE.exists():
-        return
-    registry = json.loads(REGISTRY_FILE.read_text())
-
+    print("\n📄 Building compare.html...")
     html = """<!doctype html>
 <meta charset="utf-8" />
 <title>Genkit Dev UI — Visual Verification Studio</title>
@@ -349,10 +356,8 @@ def build_compare_html(out_dir: Path):
 <p class="lead">Interactive proof artifacts, high-framerate streaming GIFs, and in-situ docsite integration previews.</p>
 """
 
-    for item in registry:
-        sid = item["id"]
-        desc = item["description"]
-        is_gif = item.get("format") == "gif"
+    for sid, desc, fmt in SHOTS:
+        is_gif = fmt == "gif"
         badge_class = "badge gif" if is_gif else "badge new"
         old_file = out_dir / "old" / f"{sid}.png"
         has_old = old_file.exists() and old_file.stat().st_size > 1000

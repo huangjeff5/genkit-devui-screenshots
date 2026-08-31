@@ -2,7 +2,7 @@
 name: genkit-devui-screenshots
 description: >-
   Audit Genkit docs for Dev UI opportunities, capture visual proof (GIFs and high-DPI screenshots),
-  and present proposals for review before updating genkit-docsite.
+  and present proposals for review before updating docs.
 ---
 
 # Dev UI docsite screenshots & opportunity scout
@@ -10,20 +10,17 @@ description: >-
 The Developer UI is Genkit's primary advantage over other frameworks, but our docs often describe complex runtime behaviors (tool loops, streaming, interrupts, evaluations) in abstract text without showing what the UI looks like.
 
 Your job is:
-1. Ensure `genkit-docsite` is up to date (`git pull origin main`).
-2. Scan the docs to find open loops where a screenshot or short GIF closes a gap for a developer or coding agent.
-3. Cleanly start/restart the sample app on isolated port 4104 and capture the shot.
-4. Review old vs new with fresh eyes. Reject anything that requires explanation.
-5. Show the user only clean survivors in `compare.html`.
-
-Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never land or copy assets until the user approves them.
+1. Scan the docs to find open loops where a screenshot or short GIF closes a gap for a developer or coding agent.
+2. Cleanly start/restart the sample app on isolated port 4104 and capture the shot.
+3. Review old vs new with fresh eyes. Reject anything that requires explanation.
+4. Show the user only clean survivors in `compare.html`.
+5. Slot approved assets into the target docsite on-demand.
 
 ---
 
 ## Rules & Hygiene
 
-- **Sync docs first**: Always pull `main` on `genkit-docsite` before auditing or editing.
-- **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**. Kill and restart stale 4104 processes if `sample_app.py` changed.
+- **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**.
 - **Do not screenshot at scale 1**. Always use `device_scale_factor=2`, `color_scheme="dark"`, and viewport `1212x708`.
 - **Do not use full VertexAI() or GoogleAI() plugins**. Use the frozen `TinyVertex` in `sample_app.py` so only defined models appear.
 - **No UI junk**. Mask any `No app detected` text to `sample`, dismiss toasts, and keep the frame clean.
@@ -36,21 +33,18 @@ Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never la
 ## Running the pipeline
 
 ```bash
-# 1. Ensure latest docsite main
-cd ~/Desktop/genkit-docsite && git pull origin main
-
-# 2. Start the starter app on 4104 (clean restart)
+# 1. Start the starter app on 4104 (clean restart)
 export GENKIT_ENV=dev
 export GOOGLE_CLOUD_PROJECT=aim-testing
 cd ~/Desktop/genkit-devui-screenshots
 genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
 
-# 3. Stage traces + capture all shots + build overview GIF + generate compare.html
-python3 ~/Desktop/genkit-devui-screenshots/scripts/capture_all.py \
+# 2. Stage traces + capture all shots + build overview GIF + generate compare.html
+python3 ~/Desktop/genkit-devui-screenshots/capture.py \
   --base-url http://127.0.0.1:4104 \
   --out-dir ~/Desktop/genkit-docsite-shots/proposed
 
-# 4. Open comparison dashboard
+# 3. Open comparison dashboard
 open ~/Desktop/genkit-docsite-shots/proposed/compare.html
 ```
 
@@ -66,19 +60,3 @@ Open the pixels directly. Reject and retake any shot that fails any of these:
 - **Vs Old**: Fail if the proposed capture has lower information density or is harder to scan than what is currently live.
 
 Any fail is a retake. Do not show failed shots.
-
----
-
-## Syncing approved shots
-
-Once the user approves the shots in `compare.html`:
-
-```bash
-# 1. Copy approved assets
-python3 ~/Desktop/genkit-devui-screenshots/scripts/sync_to_docsite.py \
-  --shots-dir ~/Desktop/genkit-docsite-shots/proposed \
-  --docsite-dir ~/Desktop/genkit-docsite
-
-# 2. Re-generate language pages and verify build
-cd ~/Desktop/genkit-docsite && pnpm generate-language-pages
-```
