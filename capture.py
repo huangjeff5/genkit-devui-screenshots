@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Capture Dev UI screenshots, build animated overview GIF, capture real in-situ docsite cards, and generate compare.html."""
+"""Capture Dev UI screenshots, build animated overview GIF, capture full-page in-situ docsite views, and generate compare.html."""
 
 import argparse
 import os
@@ -21,10 +21,10 @@ REFRESHED_SHOTS = [
 ]
 
 INSITU_SHOTS = [
-    ("card_tool_calling_loop", "Tool Calling Guide: Waterfall Trace Loop (`docs/tool-calling`)", "png"),
-    ("card_tool_runner_standalone", "Tool Calling Guide: Standalone Tool Runner (`docs/tool-calling`)", "png"),
-    ("card_dotprompt_runner", "Dotprompt Guide: Live Variables & Prompt Testing (`docs/dotprompt`)", "png"),
-    ("card_evaluation_results", "Evaluation Guide: Evaluation Results Matrix (`docs/evaluation`)", "png"),
+    ("insitu_tool_calling_loop", "Tool Calling Guide: Waterfall Trace Loop (`docs/tool-calling`)", "png"),
+    ("insitu_tool_runner_standalone", "Tool Calling Guide: Standalone Tool Runner (`docs/tool-calling`)", "png"),
+    ("insitu_dotprompt_runner", "Dotprompt Guide: Live Variables & Prompt Testing (`docs/dotprompt`)", "png"),
+    ("insitu_evaluation_results", "Evaluation Guide: Evaluation Results Matrix (`docs/evaluation`)", "png"),
 ]
 
 def hide_no_app(page: Page) -> None:
@@ -138,7 +138,7 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         print("  ✓ runstep.png")
         p_step.close()
 
-        # 5. Model Runner (click via sidebar)
+        # 5. Model Runner
         p_mod = new_page()
         p_mod.goto(f"{base_url}/", wait_until="domcontentloaded")
         p_mod.get_by_text("Models").first.click()
@@ -154,7 +154,7 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         print("  ✓ model-runner.png")
         p_mod.close()
 
-        # 6. Prompt Runner (click via sidebar)
+        # 6. Prompt Runner
         p_pr = new_page()
         p_pr.goto(f"{base_url}/", wait_until="domcontentloaded")
         p_pr.get_by_text("Prompts").first.click()
@@ -184,8 +184,8 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
     # Generate Animated GIF
     generate_overview_gif(base_url, out_dir)
 
-    # Capture Real In-Situ Docsite Section Cards
-    capture_insitu_cards(docsite_url, insitu_dir)
+    # Capture Full-Page In-Situ Docsite Views (1440x900 Laptop Standard)
+    capture_insitu_views(docsite_url, insitu_dir)
 
     # Build Interactive HTML Comparison Dashboard
     build_compare_html(out_dir)
@@ -248,91 +248,72 @@ def generate_overview_gif(base_url: str, out_dir: Path):
 
     print(f"  ✓ {gif_path.name} ({gif_path.stat().st_size // 1024} KB)")
 
-def capture_insitu_cards(docsite_url: str, insitu_dir: Path):
-    print("\n🔍 Capturing real in-situ docsite section cards...")
+def capture_insitu_views(docsite_url: str, insitu_dir: Path):
+    print("\n🔍 Capturing full in-situ docsite page views (1440x900 laptop standard)...")
     with sync_playwright() as p:
         browser = p.chromium.launch()
 
-        # 1. Tool Loop Card
-        page = browser.new_page(viewport={"width": 1100, "height": 900}, device_scale_factor=2, color_scheme="dark")
+        # 1. Tool Loop in Docsite Context
+        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
         page.goto(f"{docsite_url}/docs/tool-calling/", wait_until="networkidle")
         time.sleep(1)
         img = page.locator("img[alt*='Inspecting tool calling']")
         if img.count():
             img.scroll_into_view_if_needed()
             time.sleep(0.5)
-            box = img.bounding_box()
-            if box:
-                page.screenshot(path=str(insitu_dir / "card_tool_calling_loop.png"), clip={
-                    "x": max(0, box["x"] - 20),
-                    "y": max(0, box["y"] - 140),
-                    "width": box["width"] + 40,
-                    "height": box["height"] + 200
-                })
-                print("  ✓ card_tool_calling_loop.png")
+            # Scroll up slightly so surrounding context is visible
+            page.evaluate("window.scrollBy(0, -120)")
+            time.sleep(0.5)
+            page.screenshot(path=str(insitu_dir / "insitu_tool_calling_loop.png"))
+            print("  ✓ insitu_tool_calling_loop.png")
         page.close()
 
-        # 2. Standalone Tool Runner Card
-        page = browser.new_page(viewport={"width": 1100, "height": 900}, device_scale_factor=2, color_scheme="dark")
+        # 2. Standalone Tool Runner in Docsite Context
+        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
         page.goto(f"{docsite_url}/docs/tool-calling/", wait_until="networkidle")
         time.sleep(1)
         img = page.locator("img[alt*='Standalone tool runner']")
         if img.count():
             img.scroll_into_view_if_needed()
             time.sleep(0.5)
-            box = img.bounding_box()
-            if box:
-                page.screenshot(path=str(insitu_dir / "card_tool_runner_standalone.png"), clip={
-                    "x": max(0, box["x"] - 20),
-                    "y": max(0, box["y"] - 120),
-                    "width": box["width"] + 40,
-                    "height": box["height"] + 180
-                })
-                print("  ✓ card_tool_runner_standalone.png")
+            page.evaluate("window.scrollBy(0, -120)")
+            time.sleep(0.5)
+            page.screenshot(path=str(insitu_dir / "insitu_tool_runner_standalone.png"))
+            print("  ✓ insitu_tool_runner_standalone.png")
         page.close()
 
-        # 3. Dotprompt Runner Card
-        page = browser.new_page(viewport={"width": 1100, "height": 900}, device_scale_factor=2, color_scheme="dark")
+        # 3. Dotprompt Runner in Docsite Context
+        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
         page.goto(f"{docsite_url}/docs/dotprompt/", wait_until="networkidle")
         time.sleep(1)
         img = page.locator("img[alt*='Dotprompt runner']")
         if img.count():
             img.scroll_into_view_if_needed()
             time.sleep(0.5)
-            box = img.bounding_box()
-            if box:
-                page.screenshot(path=str(insitu_dir / "card_dotprompt_runner.png"), clip={
-                    "x": max(0, box["x"] - 20),
-                    "y": max(0, box["y"] - 140),
-                    "width": box["width"] + 40,
-                    "height": box["height"] + 200
-                })
-                print("  ✓ card_dotprompt_runner.png")
+            page.evaluate("window.scrollBy(0, -120)")
+            time.sleep(0.5)
+            page.screenshot(path=str(insitu_dir / "insitu_dotprompt_runner.png"))
+            print("  ✓ insitu_dotprompt_runner.png")
         page.close()
 
-        # 4. Evaluation Results Card
-        page = browser.new_page(viewport={"width": 1100, "height": 900}, device_scale_factor=2, color_scheme="dark")
+        # 4. Evaluation Results in Docsite Context
+        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
         page.goto(f"{docsite_url}/docs/evaluation/", wait_until="networkidle")
         time.sleep(1)
         img = page.locator("img[alt*='Evaluation run results']")
         if img.count():
             img.scroll_into_view_if_needed()
             time.sleep(0.5)
-            box = img.bounding_box()
-            if box:
-                page.screenshot(path=str(insitu_dir / "card_evaluation_results.png"), clip={
-                    "x": max(0, box["x"] - 20),
-                    "y": max(0, box["y"] - 140),
-                    "width": box["width"] + 40,
-                    "height": box["height"] + 200
-                })
-                print("  ✓ card_evaluation_results.png")
+            page.evaluate("window.scrollBy(0, -120)")
+            time.sleep(0.5)
+            page.screenshot(path=str(insitu_dir / "insitu_evaluation_results.png"))
+            print("  ✓ insitu_evaluation_results.png")
         page.close()
 
         browser.close()
 
 def build_compare_html(out_dir: Path):
-    print("\n📄 Building compare.html with real in-situ docsite cards...")
+    print("\n📄 Building compare.html with full in-situ docsite views...")
     html = """<!doctype html>
 <meta charset="utf-8" />
 <title>Genkit Dev UI — Visual Verification Studio</title>
@@ -398,17 +379,17 @@ def build_compare_html(out_dir: Path):
 """
 
     html += """
-<h2 class="section-header">Batch 2: Real In-Situ Docsite Embeds</h2>
-<p class="lead">Actual screenshots of the rendered docsite pages showing the exact heading, prose, and code context.</p>
+<h2 class="section-header">Batch 2: Full In-Situ Docsite Previews (1440x900 Laptop Layout)</h2>
+<p class="lead">Realistic browser viewport captures showing the actual layout: Left Navigation, Content Column, Typography, and Right Table of Contents.</p>
 """
 
     for card_id, desc, fmt in INSITU_SHOTS:
         html += f"""
 <section id="{card_id}">
-  <h3><span>{desc}</span> <span class="badge new">In-Situ Rendered Doc Card</span></h3>
+  <h3><span>{desc}</span> <span class="badge new">1440x900 Laptop View</span></h3>
   <div class="single-frame">
     <figure>
-      <figcaption>Actual Rendered Docsite Page Section</figcaption>
+      <figcaption>Full Browser Viewport on Docsite</figcaption>
       <img src="in_situ/{card_id}.png" alt="{card_id}" />
     </figure>
   </div>
@@ -419,7 +400,7 @@ def build_compare_html(out_dir: Path):
     print(f"  ✓ compare.html updated at {out_dir / 'compare.html'}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Capture all Genkit Dev UI docsite shots and real in-situ cards")
+    parser = argparse.ArgumentParser(description="Capture all Genkit Dev UI docsite shots and full in-situ views")
     parser.add_argument("--base-url", default="http://127.0.0.1:4104", help="Developer UI base URL")
     parser.add_argument("--docsite-url", default="http://localhost:4321", help="Local Docsite preview URL")
     parser.add_argument("--out-dir", default=str(Path.home() / "Desktop/genkit-docsite-shots/proposed"), help="Output directory")
