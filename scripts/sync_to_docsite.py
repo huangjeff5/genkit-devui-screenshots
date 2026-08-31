@@ -7,15 +7,14 @@ import shutil
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-BRIEFS_DIR = REPO_ROOT / "briefs"
+REGISTRY_FILE = REPO_ROOT / "registry.json"
 
 def sync_assets(shots_dir: Path, docsite_dir: Path):
-    reg_file = BRIEFS_DIR / "registry.json"
-    if not reg_file.exists():
+    if not REGISTRY_FILE.exists():
         print("Error: registry.json not found.")
         return
 
-    registry = json.loads(reg_file.read_text())
+    registry = json.loads(REGISTRY_FILE.read_text())
     print(f"▶ Syncing {len(registry)} assets to {docsite_dir}...")
 
     synced = 0

@@ -10,8 +10,7 @@ from pathlib import Path
 from playwright.sync_api import Page, sync_playwright
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-BRIEFS_DIR = REPO_ROOT / "briefs"
-SAMPLE_DIR = REPO_ROOT / "sample"
+REGISTRY_FILE = REPO_ROOT / "registry.json"
 
 def hide_no_app(page: Page) -> None:
     page.evaluate(
@@ -35,7 +34,7 @@ def stage_traces(python_bin: str, base_url: str):
 
     stage_code = """
 import asyncio
-from app import ai, menuSuggestionFlow, complexMenuSuggestionFlow, menuQuestionFlow, dishAdvisoryFlow, ThemeInput, MenuQuestion, DishQuery
+from sample_app import ai, menuSuggestionFlow, complexMenuSuggestionFlow, menuQuestionFlow, dishAdvisoryFlow, ThemeInput, MenuQuestion, DishQuery
 
 async def main():
     try:
@@ -49,7 +48,7 @@ async def main():
 
 asyncio.run(main())
 """
-    subprocess.run([python_bin, "-c", stage_code], cwd=SAMPLE_DIR, env=env, check=False)
+    subprocess.run([python_bin, "-c", stage_code], cwd=REPO_ROOT, env=env, check=False)
     time.sleep(1)
 
 def run_capture(base_url: str, out_dir: Path, python_bin: str):
@@ -322,10 +321,9 @@ def generate_overview_gif(base_url: str, out_dir: Path):
 
 def build_compare_html(out_dir: Path):
     print("\n📄 Building Interactive compare.html...")
-    reg_file = BRIEFS_DIR / "registry.json"
-    if not reg_file.exists():
+    if not REGISTRY_FILE.exists():
         return
-    registry = json.loads(reg_file.read_text())
+    registry = json.loads(REGISTRY_FILE.read_text())
 
     html = """<!doctype html>
 <meta charset="utf-8" />

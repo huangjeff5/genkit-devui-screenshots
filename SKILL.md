@@ -23,9 +23,9 @@ Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never la
 ## Rules & Hygiene
 
 - **Sync docs first**: Always pull `main` on `genkit-docsite` before auditing or editing.
-- **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**. Kill and restart stale 4104 processes if the sample app changed.
+- **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**. Kill and restart stale 4104 processes if `sample_app.py` changed.
 - **Do not screenshot at scale 1**. Always use `device_scale_factor=2`, `color_scheme="dark"`, and viewport `1212x708`.
-- **Do not use full VertexAI() or GoogleAI() plugins**. Use the frozen `TinyVertex` in `sample/app.py` so only defined models appear.
+- **Do not use full VertexAI() or GoogleAI() plugins**. Use the frozen `TinyVertex` in `sample_app.py` so only defined models appear.
 - **No UI junk**. Mask any `No app detected` text to `sample`, dismiss toasts, and keep the frame clean.
 - **GIF vs Screenshot**:
   - **GIF** (3–8s loop, 12 fps): real-time streaming, pause/resume interrupts, parameter slider testing, or trace tree expanding.
@@ -42,8 +42,8 @@ cd ~/Desktop/genkit-docsite && git pull origin main
 # 2. Start the starter app on 4104 (clean restart)
 export GENKIT_ENV=dev
 export GOOGLE_CLOUD_PROJECT=aim-testing
-cd ~/Desktop/genkit-docsite-shots/sample
-genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python app.py
+cd ~/Desktop/genkit-devui-screenshots
+genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
 
 # 3. Stage traces + capture all shots + build overview GIF + generate compare.html
 python3 ~/Desktop/genkit-devui-screenshots/scripts/capture_all.py \

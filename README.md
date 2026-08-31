@@ -56,8 +56,8 @@ The shots look good except for "inspect". Please retake that shot with the getDi
 ## Repo structure
 
 - `SKILL.md`: Jetski skill definition, hygiene steps, and review rubric.
-- `briefs/registry.json`: List of all registered shots, routes, actions, and docsite destination paths.
-- `sample/app.py`: Frozen starter app with models, flows, tools, and prompts.
+- `registry.json`: List of all registered shots, routes, actions, and docsite destination paths.
+- `sample_app.py`: Frozen starter app with models, flows, tools, and prompts.
 - `scripts/capture_all.py`: Playwright capture engine and ffmpeg GIF generator.
 - `scripts/sync_to_docsite.py`: Copies approved assets to `genkit-docsite`.
 
@@ -72,15 +72,15 @@ cd ~/Desktop/genkit-docsite && git checkout main && git pull
 # 2. Start the sample app on port 4104
 export GENKIT_ENV=dev
 export GOOGLE_CLOUD_PROJECT=aim-testing
-cd ~/Desktop/genkit-devui-screenshots/sample
-genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python app.py
+cd ~/Desktop/genkit-devui-screenshots
+genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
 
 # 3. Run capture pipeline
-python3 ~/Desktop/genkit-devui-screenshots/scripts/capture_all.py --base-url http://127.0.0.1:4104
+python3 scripts/capture_all.py --base-url http://127.0.0.1:4104
 
 # 4. Open review dashboard
 open ~/Desktop/genkit-docsite-shots/proposed/compare.html
 
 # 5. Sync approved shots to docsite
-python3 ~/Desktop/genkit-devui-screenshots/scripts/sync_to_docsite.py
+python3 scripts/sync_to_docsite.py
 ```
