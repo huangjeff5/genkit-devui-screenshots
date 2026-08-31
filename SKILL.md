@@ -2,30 +2,31 @@
 name: genkit-devui-screenshots
 description: >-
   Audit Genkit docs for Dev UI opportunities, capture visual proof (GIFs and high-DPI screenshots),
-  and present proposals for review before updating docs.
+  and compose GitHub PRs with full in-situ docsite viewport previews in the PR description only.
 ---
 
-# Dev UI docsite screenshots & opportunity scout
+# Dev UI docsite screenshots & visual PR pipeline
 
 The Developer UI is Genkit's primary advantage over other frameworks, but our docs often describe complex runtime behaviors (tool loops, streaming, interrupts, evaluations) in abstract text without showing what the UI looks like.
 
 Your job is:
 1. Scan the docs to find open loops where a screenshot or short GIF closes a gap for a developer or coding agent.
-2. Cleanly start/restart the sample app on isolated port 4104 and capture the shot.
-3. Review old vs new with fresh eyes. Reject anything that requires explanation.
-4. Show the user only clean survivors in `compare.html`.
-5. Slot approved assets into the target docsite on-demand.
+2. Cleanly start/restart the sample app on isolated port 4104 and capture the Dev UI assets.
+3. Capture full 1440x900 in-situ docsite viewport screenshots on the running local docsite (`http://localhost:4321`).
+4. Push in-situ preview cards to `huangjeff5/genkit-devui-screenshots/previews/`.
+5. Compose the GitHub PR using `gh pr create` with the in-situ screenshots embedded in the PR description ONLY. Never include preview cards in the target docsite changeset.
 
 ---
 
-## Rules & Hygiene
+## Strict Rules
 
 - **Do not touch port 4000**. That is the user's persistent UI. Screenshot UI is always **4104**.
-- **Do not screenshot at scale 1**. Always use `device_scale_factor=2`, `color_scheme="dark"`, and viewport `1212x708`.
+- **Do not screenshot at scale 1**. Always use `device_scale_factor=2`, `color_scheme="dark"`, and standard viewport `1212x708`.
 - **Do not use full VertexAI() or GoogleAI() plugins**. Use the frozen `TinyVertex` in `sample_app.py` so only defined models appear.
-- **No UI junk**. Mask any `No app detected` text to `sample`, dismiss toasts, and keep the frame clean.
+- **In-Situ Viewports Must Be Full-Width (1440x900)**: Capture the full 3-column browser layout (left navigation + center content + right TOC) so reviewers can verify sizing, typography balance, and margins at a glance. Never crop tightly or zoom in.
+- **Zero Changeset Contamination**: In-situ docsite screenshots belong in the **PR description ONLY**, hosted externally in `huangjeff5/genkit-devui-screenshots/previews/`. Never commit preview cards to the `genkit-ai/docsite` branch.
 - **GIF vs Screenshot**:
-  - **GIF** (3–8s loop, 12 fps): real-time streaming, pause/resume interrupts, parameter slider testing, or trace tree expanding.
+  - **GIF** (3–8s loop, 12 fps, Lanczos): real-time streaming, pause/resume interrupts, parameter slider testing, or trace tree expanding.
   - **Screenshot** (PNG): static schemas, trace waterfalls, latency tables, or evaluation scoreboards.
 
 ---
@@ -39,9 +40,10 @@ export GOOGLE_CLOUD_PROJECT=aim-testing
 cd ~/Desktop/genkit-devui-screenshots
 genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
 
-# 2. Stage traces + capture all shots + build overview GIF + generate compare.html
+# 2. Run capture engine + build overview GIF + capture 1440x900 in-situ views
 python3 ~/Desktop/genkit-devui-screenshots/capture.py \
   --base-url http://127.0.0.1:4104 \
+  --docsite-url http://localhost:4321 \
   --out-dir ~/Desktop/genkit-docsite-shots/proposed
 
 # 3. Open comparison dashboard
@@ -50,13 +52,11 @@ open ~/Desktop/genkit-docsite-shots/proposed/compare.html
 
 ---
 
-## Review rubric (before showing the user)
+## PR Creation Checklist
 
-Open the pixels directly. Reject and retake any shot that fails any of these:
+When submitting a pull request to `genkit-ai/docsite`:
 
-- **Beat**: Fail if a stranger cannot understand the single point in two seconds without reading a caption.
-- **Junk**: Fail if there is `No app detected` text, error toast overlays, empty tabs, or raw stack traces.
-- **Crop**: Fail if the frame is not standard 1212x708 dark-mode or is blurry.
-- **Vs Old**: Fail if the proposed capture has lower information density or is harder to scan than what is currently live.
-
-Any fail is a retake. Do not show failed shots.
+- [ ] Target branch contains ONLY the modified `.mdx` files and legitimate `src/assets/` images (0 preview card files).
+- [ ] In-situ viewport screenshots (1440x900) pushed to `huangjeff5/genkit-devui-screenshots/previews/`.
+- [ ] PR description embeds the in-situ viewports and Before vs. After comparison tables via public raw GitHub URLs.
+- [ ] `pnpm generate-language-pages` run and verified with 0 errors.

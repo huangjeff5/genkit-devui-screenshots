@@ -1,6 +1,6 @@
 # Genkit Dev UI docsite screenshots & opportunity scout
 
-Tooling and workflow for discovering opportunities to highlight the Genkit Developer UI, capturing high-DPI screenshots and GIFs, and presenting visual proposals for documentation.
+Tooling and workflow for discovering opportunities to highlight the Genkit Developer UI, capturing high-DPI screenshots and GIFs, and creating high-clarity PRs with full in-situ docsite previews.
 
 ---
 
@@ -26,23 +26,32 @@ For any page that could benefit from visual proof:
 1. Decide whether an animated GIF or a static screenshot is better.
 2. Write the sample code needed to trigger that Dev UI state.
 3. Capture the visual proof on isolated port 4104 (restart the starter app cleanly if already running).
-4. Open compare.html showing the proposed images/GIFs embedded alongside the matching doc text so I can review them.
+4. Capture full 1440x900 in-situ docsite viewport screenshots from the local docsite.
+5. Open compare.html showing the proposed images/GIFs embedded alongside the matching doc text so I can review them.
 ```
 
 ### 2. Audit a specific page or PR
 ```text
-Analyze docs/agents/interrupts.mdx. Find where developers will have questions about what the UI looks like, capture the Dev UI in that exact state (as a GIF or screenshot), and show me a proposal with the code and visual side-by-side in compare.html.
+Analyze docs/agents/interrupts.mdx. Find where developers will have questions about what the UI looks like, capture the Dev UI in that exact state (as a GIF or screenshot), and show me a proposal with full 1440x900 in-situ viewport previews in compare.html.
 ```
 
-### 3. Approve and apply to docs
+### 3. Approve and open PR
 ```text
-I like proposals #1, #2, and #4 from compare.html. Please slot those screenshots/GIFs and text adjustments into the docsite and start the local docsite server so I can preview the final result in my browser.
+I like proposals #1, #2, and #4 from compare.html. Please slot those screenshots/GIFs and text adjustments into the docsite branch, push the 1440x900 in-situ preview cards to huangjeff5/genkit-devui-screenshots/previews/, and open a PR with the in-situ screenshots embedded in the PR description only (keeping the docsite git diff 100% clean).
 ```
 
 ### 4. Retake or adjust a shot
 ```text
 The shots look good except for "inspect". Please retake that shot with the getDishDetails span selected in the waterfall tree so its input/output payload drawer is visible, and refresh compare.html.
 ```
+
+---
+
+## Visual PR Standards
+
+- **Full 1440x900 In-Situ Viewports**: Always capture the complete 3-column layout (left nav + content + right TOC) on the running docsite so reviewers can verify sizing and reading flow at a glance without zooming.
+- **PR Description ONLY**: In-situ docsite preview cards are hosted in this public repository (`previews/`) and embedded in the PR body. They must **never** be committed to the target `genkit-ai/docsite` repository branch.
+- **2-Minute Approvals**: Reviewers must be able to inspect all visual diffs and in-situ layouts directly on GitHub without checking out the branch.
 
 ---
 
@@ -55,10 +64,11 @@ The shots look good except for "inspect". Please retake that shot with the getDi
 
 ## Repo structure
 
-- `README.md`: Playbook & copy-paste Jetski prompts.
-- `SKILL.md`: Jetski skill definition and review rubric.
+- `README.md`: Playbook, visual PR standards & copy-paste Jetski prompts.
+- `SKILL.md`: Jetski skill definition, guardrails, and review rubric.
 - `sample_app.py`: Frozen starter app with models, flows, tools, and prompts.
-- `capture.py`: Playwright capture engine and ffmpeg GIF generator.
+- `capture.py`: Playwright capture engine, ffmpeg GIF generator, and in-situ viewport capturer.
+- `previews/`: Hosted full-page in-situ viewport screenshots for PR descriptions.
 
 ---
 
@@ -71,8 +81,8 @@ export GOOGLE_CLOUD_PROJECT=aim-testing
 cd ~/Desktop/genkit-devui-screenshots
 genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python sample_app.py
 
-# 2. Run capture pipeline
-python3 capture.py --base-url http://127.0.0.1:4104
+# 2. Run capture pipeline + full in-situ viewport capture
+python3 capture.py --base-url http://127.0.0.1:4104 --docsite-url http://localhost:4321
 
 # 3. Open review dashboard
 open ~/Desktop/genkit-docsite-shots/proposed/compare.html
