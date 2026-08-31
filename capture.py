@@ -4,6 +4,7 @@
 import argparse
 import os
 import subprocess
+import sys
 import time
 from pathlib import Path
 from playwright.sync_api import Locator, Page, sync_playwright
@@ -46,7 +47,6 @@ def hide_no_app(page: Page) -> None:
 
 def get_clean_workbench_clip(page: Page) -> dict:
     """Calculates clean crop for main workbench area, excluding left sidebar navigation completely."""
-    # Find the main drawer content area
     main_area = page.locator("mat-drawer-content, .main-content, main").first
     if main_area.count():
         box = main_area.bounding_box()
@@ -57,7 +57,6 @@ def get_clean_workbench_clip(page: Page) -> dict:
                 "width": box["width"],
                 "height": 708
             }
-    # Fallback to standard sidebar offset
     return {"x": 290, "y": 0, "width": 1212 - 290, "height": 708}
 
 def stage_traces(python_bin: str, base_url: str):
@@ -163,7 +162,6 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
             p_step.wait_for_timeout(1000)
         hide_no_app(p_step)
 
-        # Precise anchor on trace tree block
         clip_tree = {"x": 270, "y": 47, "width": 304, "height": 220}
         p_step.screenshot(path=str(out_dir / "runstep.png"), clip=clip_tree)
         print("  ✓ runstep.png (anchored tree block)")
@@ -405,7 +403,7 @@ if __name__ == "__main__":
     parser.add_argument("--base-url", default="http://127.0.0.1:4104", help="Developer UI base URL")
     parser.add_argument("--docsite-url", default="http://localhost:4321", help="Local Docsite preview URL")
     parser.add_argument("--out-dir", default=str(Path.home() / "Desktop/genkit-docsite-shots/proposed"), help="Output directory")
-    parser.add_argument("--python-bin", default="/Users/huangjeff/Desktop/genkit-python/.venv/bin/python", help="Python binary for sample app")
+    parser.add_argument("--python-bin", default=sys.executable, help="Python binary for sample app")
     args = parser.parse_args()
 
     run_capture(args.base_url, args.docsite_url, Path(args.out_dir), args.python_bin)
