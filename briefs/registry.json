@@ -1,0 +1,115 @@
+[
+  {
+    "id": "home",
+    "route": "/",
+    "format": "png",
+    "targetDocPath": "src/assets/dev_ui/genkit_dev_ui_home.png",
+    "description": "Home dashboard showing healthy runtime, registered counts, and recent trace timeline"
+  },
+  {
+    "id": "flow-runner",
+    "route": "/flows/menuSuggestionFlow",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-flows.png",
+    "description": "Flow runner interface with JSON payload input and Run action"
+  },
+  {
+    "id": "inspect",
+    "route": "/traces",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-inspect.png",
+    "description": "Trace waterfall inspector for multi-step AI workflow"
+  },
+  {
+    "id": "runstep",
+    "route": "/traces",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-runstep.png",
+    "description": "ai.run step telemetry row isolated within execution trace"
+  },
+  {
+    "id": "model-runner",
+    "route": "/models/vertexai/gemini-2.5-flash",
+    "format": "png",
+    "targetDocPath": "src/assets/developer_ui_model_runner.png",
+    "description": "Model runner with direct prompt input and configuration drawer"
+  },
+  {
+    "id": "prompt-runner",
+    "route": "/prompts/hello",
+    "format": "png",
+    "targetDocPath": "src/assets/prompts-in-developer-ui.png",
+    "description": "Prompt runner with live testing and configuration parameters"
+  },
+  {
+    "id": "traces",
+    "route": "/traces",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-traces.png",
+    "description": "Traces observatory table with durations, statuses, and token metrics"
+  },
+  {
+    "id": "datasets",
+    "route": "/datasets",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-datasets.png",
+    "description": "Datasets overview list for evaluation datasets"
+  },
+  {
+    "id": "dataset-create",
+    "route": "/datasets",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-dataset-create.png",
+    "description": "Create dataset modal form"
+  },
+  {
+    "id": "dataset-examples",
+    "route": "/datasets/myFactsQaDataset",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-dataset-examples.png",
+    "description": "Dataset examples table with validated JSON queries"
+  },
+  {
+    "id": "eval-run",
+    "route": "/evaluations",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-eval-run.png",
+    "description": "Run new evaluation configuration dialog"
+  },
+  {
+    "id": "eval-results",
+    "route": "/evaluations/eval-run-20260831-01",
+    "format": "png",
+    "targetDocPath": "src/assets/devui-eval-results.png",
+    "description": "Evaluation run results matrix with metrics and LLM judge reasoning"
+  },
+  {
+    "id": "devui_tool_runner_standalone",
+    "route": "/tools/getDishDetails",
+    "format": "png",
+    "targetDocPath": "src/assets/devui_tool_runner_standalone.png",
+    "description": "Standalone tool runner with auto-generated schema form and execution output"
+  },
+  {
+    "id": "trace_tool_call_waterfall_loop",
+    "route": "/traces",
+    "format": "png",
+    "targetDocPath": "src/assets/trace_tool_call_waterfall_loop.png",
+    "description": "Multi-turn tool call waterfall trace (model -> tool execution -> model synthesis)"
+  },
+  {
+    "id": "dotprompt_runner_live_variables",
+    "route": "/prompts/welcome_guest",
+    "format": "png",
+    "targetDocPath": "src/assets/dotprompt_runner_live_variables.png",
+    "description": "Dotprompt runner with live dynamic variables, resolved preview, and export control"
+  },
+  {
+    "id": "genkit_developer_ui_overview",
+    "route": "/flows/menuSuggestionFlow",
+    "format": "gif",
+    "fps": 12,
+    "targetDocPath": "public/genkit_developer_ui_overview.gif",
+    "description": "Interactive overview tour showing real-time token streaming and trace slide-over"
+  }
+]

@@ -1,4 +1,4 @@
-"""Tiny starter for Dev UI doc screenshots. Two Gemini models, three menu flows.
+"""Tiny starter for Dev UI doc screenshots with models, flows, tools, and prompts.
 
 Do not replace this with VertexAI() or GoogleAI() as a plugin — those list a catalog
 and the home shot stops looking like something you just started.
@@ -9,7 +9,7 @@ from genkit.model import model_action_metadata
 from genkit_google_genai import VertexAI
 from genkit_google_genai.google import vertexai_name
 from genkit_google_genai.models.gemini import get_model_config_schema, google_model_info
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 _MODELS = ('gemini-2.5-flash', 'gemini-2.5-pro')
 
@@ -56,7 +56,38 @@ class MenuAnswer(BaseModel):
     answer: str
 
 
-ai.define_prompt(name='hello', prompt='Write a one-line greeting for a restaurant host.')
+class DishQuery(BaseModel):
+    dish_name: str = Field(default='Dragon Roast', description='The name of the menu dish')
+
+
+class GuestReservation(BaseModel):
+    restaurantName: str = Field(default='The Rusty Anchor', description='Restaurant name')
+    guestName: str = Field(default='Captain Jack', description='Guest name')
+    partySize: int = Field(default=4, description='Party size')
+
+
+@ai.tool(name='getDishDetails', description='Get nutritional and allergen information for a menu dish.')
+async def getDishDetails(query: DishQuery) -> str:
+    return (
+        f'Nutritional Profile for {query.dish_name}:\n'
+        '- Calories: 520 kcal\n'
+        '- Allergens: Contains tree nuts (almonds) and gluten\n'
+        '- Dairy: Dairy-free'
+    )
+
+
+ai.define_prompt(
+    name='hello',
+    prompt='Write a one-line greeting for a restaurant host welcoming guests for dinner.',
+)
+
+ai.define_prompt(
+    name='welcome_guest',
+    input_schema=GuestReservation,
+    prompt=(
+        'You are a host at {{restaurantName}}. Welcome {{guestName}} who has a reservation for {{partySize}} people.'
+    ),
+)
 
 
 @ai.flow()
@@ -104,6 +135,15 @@ async def menuQuestionFlow(question_input: MenuQuestion) -> MenuAnswer:
         prompt=f"Today's menu:\n{menu}\n\nQuestion:\n{question_input.question}",
     )
     return MenuAnswer(answer=result.text)
+
+
+@ai.flow()
+async def dishAdvisoryFlow(query: DishQuery) -> str:
+    result = await ai.generate(
+        prompt=f'Can a customer with a severe tree nut allergy safely eat the {query.dish_name}? Check the dish details first.',
+        tools=[getDishDetails],
+    )
+    return result.text
 
 
 async def main() -> None:

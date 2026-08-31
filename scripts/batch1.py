@@ -126,7 +126,7 @@ def capture(base: str, out: Path, traces: dict[str, str]) -> dict[str, str]:
         )
         page.goto(base, wait_until='domcontentloaded')
         page.get_by_text('menuSuggestionFlow').first.wait_for(timeout=15000)
-        page.wait_for_timeout(400)
+        page.wait_for_timeout(1500)
         hide_no_app(page)
         raw = out / '_home_raw.png'
         page.screenshot(path=str(raw), type='png')

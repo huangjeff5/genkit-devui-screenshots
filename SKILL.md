@@ -1,93 +1,75 @@
 ---
 name: genkit-devui-screenshots
 description: >-
-  Capture Genkit Developer UI screenshots for the genkit-ai/docsite and
-  present them for a fast Jeff vet. Use when the user mentions docsite
-  screenshots, Dev UI screenshots, Developer UI pictures, "vet the shots",
-  or updating genkit.dev images of the local UI.
+  Capture Genkit Developer UI screenshots and animated GIFs for the genkit-ai/docsite,
+  generate interactive visual diffs in compare.html, and sync approved assets to docsite.
+  Use when the user mentions docsite screenshots, Dev UI screenshots, Developer UI pictures,
+  "vet the shots", updating genkit.dev images of the local UI, or running the screenshot pipeline.
 ---
 
-# Dev UI docsite screenshots
+# Dev UI Docsite Screenshots & Visual Proof Pipeline
 
-You do not invent the composition. A frozen starter and `scripts/batch1.py` already chose the sample, the crop, and the click. Your job is: run the script, **look at old vs new with fresh eyes**, reject anything a stranger would not get, then show Jeff only survivors.
+A deterministic, one-command pipeline that stages traces on a frozen sample app, captures 2x Retina screenshots and Lanczos palette GIFs across all Genkit primitives, builds an interactive visual diff dashboard (`compare.html`), and syncs approved assets into `genkit-docsite`.
 
-Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite). Never land, commit, or PR until Jeff says `ok` on that shot.
+Docs live in [genkit-ai/docsite](https://github.com/genkit-ai/docsite).
 
-## Do not
+---
 
-- Write a Playwright script, a new `app.py`, or a new brief.
-- Call `VertexAI()` or `GoogleAI()` as a plugin. Those list a catalog. Home dies.
-- Screenshot at scale 1, or screenshot the whole window and crop later.
-- Kill anything on port **4000**. That is a long-lived UI. Screenshot UI is **4104**.
-- Shoot or replace the cats gif unless Jeff says replace it.
-- Tour the UI in chat. Do not sit and narrate.
-- Show Jeff a shot the script marked `FAIL`.
+## 🚫 Critical Rules
 
-## Run this
+- **Do not touch port 4000**: That is a user's persistent UI. The screenshot UI runs on isolated port **4104**.
+- **Do not screenshot at scale 1**: Always capture at `device_scale_factor=2` with `color_scheme="dark"` and `viewport={"width": 1212, "height": 708}`.
+- **Do not introduce catalog junk**: Use the frozen `TinyVertex` in `sample/app.py` so only defined models appear.
+- **Clean frame requirement**: Mask any `No app detected` chips to `sample`, dismiss transient toast overlays, and verify trace timelines before capturing.
+
+---
+
+## 🚀 One-Command Execution
 
 ```bash
-# REPO is this clone, e.g. ~/src/genkit-devui-screenshots
+# REPO is this clone, e.g. ~/Desktop/genkit-devui-screenshots
 
-# 1. Copy the frozen starter (overwrite, do not edit)
+# 1. Stage and run the frozen starter on port 4104 (if not already running)
 mkdir -p ~/Desktop/genkit-docsite-shots/sample
 cp "$REPO/sample/app.py" ~/Desktop/genkit-docsite-shots/sample/app.py
 
-# 2. If nothing is on 4104, start the frozen starter. Do not touch 4000.
-#    Reuse 4104 if it is already this sample (Flows 3, Models 2).
-export GENKIT_TELEMETRY_SERVER=http://127.0.0.1:4134
 export GENKIT_ENV=dev
 export GOOGLE_CLOUD_PROJECT=aim-testing
 cd ~/Desktop/genkit-docsite-shots/sample
-# only if 4104 is free:
-# genkit start -p 4104 -- <genkit-py-venv>/python app.py
+genkit start -p 4104 -- /Users/huangjeff/Desktop/genkit-python/.venv/bin/python app.py
 
-# 3. Stage traces + capture + vet. One command.
-python3 "$REPO/scripts/batch1.py" \
+# 2. Run the unified capture engine (stages traces, captures all 15 assets, builds GIF & compare.html)
+python3 "$REPO/scripts/capture_all.py" \
   --base-url http://127.0.0.1:4104 \
   --out-dir ~/Desktop/genkit-docsite-shots/proposed
+
+# 3. Open the visual review dashboard
+open ~/Desktop/genkit-docsite-shots/proposed/compare.html
 ```
 
-If the script prints `FAIL`, run it **once** more. If it fails again, stop and paste the FAIL lines. Do not fix by shooting a full page.
+---
 
-The script writes `proposed/compare.html` (live docsite on the left, new on the right). That is what Jeff opens.
+## 🔍 Self-Review Rubric (Required Before Sharing)
 
-## Self-review (required, before Jeff sees anything)
+For every captured asset, inspect the pixels against the 4 criteria:
 
-The script can tell you the crop is the right size. It cannot tell you the picture makes sense. You have to look.
+| # | Criterion | Rule |
+| :--- | :--- | :--- |
+| 1 | **The Beat** | Can a developer understand the core feature in 2 seconds without reading a caption? |
+| 2 | **No Junk** | Zero transient error toasts, clean trace timelines, no `No app detected` text, no empty tabs. |
+| 3 | **The Crop** | Standard 1212x708 frame, high-DPI (2x Retina), consistent dark mode padding. |
+| 4 | **Vs Old** | The proposed capture must be strictly higher information density and cleaner than the live docsite baseline. |
 
-For **each** of home, flow-runner, inspect, runstep:
+---
 
-1. Read `proposed/old/<id>.png` and `proposed/<id>.png`. Actually open the pixels. Do not vet from filenames or page text.
-2. Answer these four questions with yes/no. A stranger on the docs page, two seconds, no caption.
+## 📦 Syncing Approved Assets to Docsite
 
-| # | question | fail if |
-| --- | --- | --- |
-| Beat | Can they see the sentence's one thing? (home = a starter app; runner = type JSON and Run; inspect = this generate's ingredients; runstep = `retrieve-daily-menu` is its own row) | you have to explain the shot |
-| Junk | Is the frame clean? | catalog junk, `No app detected`, a pink failed row, open history, empty Logs, Attributes soup |
-| Crop | Is this the right size class? | home is a dump; runner/inspect include OS chrome; runstep includes the detail pane or left nav |
-| Vs old | Is the new one at least as easy to get? | old showed a dish / a tight tree and you showed plumbing |
+Once the PM approves the shots in `compare.html`:
 
-Any **no** → that id is a reject. Retake only that id. Jeff never sees it.
-
-Do not talk yourself into a yes. If you hesitate, it is a no.
-
-## Then say this (only survivors)
-
-Open `~/Desktop/genkit-docsite-shots/proposed/compare.html`.
-
-```
-home: starter sidebar, two Gemini ids, a medieval menu in the traces
-flow-runner: {"theme":"medieval"} + Run, history shut
-inspect: ingredients Preview on the middle generate
-runstep: retrieve-daily-menu as its own tree row
+```bash
+python3 "$REPO/scripts/sync_to_docsite.py" \
+  --shots-dir ~/Desktop/genkit-docsite-shots/proposed \
+  --docsite-dir ~/Desktop/genkit-docsite
 ```
 
-Wait for:
-
-```
-ok home, flow-runner, inspect, runstep
-retake inspect (note)
-skip gif
-```
-
-Copy only `ok` shots to the `dest` in `briefs/batch1.json`. Keep the filename. Wait for "PR it."
+Then commit and push the updated docsite branch.
