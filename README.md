@@ -10,13 +10,13 @@ Tooling and workflow for auditing [genkit-ai/docsite](https://github.com/genkit-
 2. **Abstract documentation**: Explaining recursive tool calling, human-in-the-loop pauses, or structured streaming with text alone leaves open loops. Showing the runtime trace closes the loop.
 3. **Competitive advantage**: Other frameworks require external cloud platforms or paid dashboards to inspect traces. Genkit provides a zero-config local UI.
 4. **Agent explainability**: Coding agents reading the docs can use visual artifacts to help developers verify agent behavior on specific tabs and spans.
-5. **Zero-CLI workflow for PMs**: Non-technical team members can run the whole process inside Jetski without touching a terminal.
+5. **Zero-friction execution**: Anyone on the team can trigger audits, captures, and doc updates directly through natural language in Jetski without manually wiring up scripts or local test harnesses.
 
 ---
 
 ## Jetski prompts (copy & paste)
 
-If you're using Jetski, you don't need to run terminal commands. Paste these into chat:
+Paste these into chat to run the workflow:
 
 ### 1. Audit docs for new Dev UI opportunities
 ```text
