@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Capture Dev UI screenshots, build animated overview GIF, capture full-page in-situ docsite views, and generate compare.html."""
+"""Intelligent Dev UI capture engine: element-anchored cropping, overview GIF, 1440x900 in-situ docsite views, and compare.html."""
 
 import argparse
 import os
 import subprocess
 import time
 from pathlib import Path
-from playwright.sync_api import Page, sync_playwright
+from playwright.sync_api import Locator, Page, sync_playwright
 
 REPO_ROOT = Path(__file__).resolve().parent
 
@@ -21,6 +21,10 @@ REFRESHED_SHOTS = [
 ]
 
 INSITU_SHOTS = [
+    ("insitu_pr327_devtools", "Devtools Overview (`docs/devtools`)", "png"),
+    ("insitu_pr327_flows_runner", "Flow Runner (`docs/flows`)", "png"),
+    ("insitu_pr327_flows_inspect", "Trace Waterfall (`docs/flows`)", "png"),
+    ("insitu_pr327_flows_runstep", "Step Telemetry (`docs/flows`)", "png"),
     ("insitu_tool_calling_loop", "Tool Calling Guide: Waterfall Trace Loop (`docs/tool-calling`)", "png"),
     ("insitu_tool_runner_standalone", "Tool Calling Guide: Standalone Tool Runner (`docs/tool-calling`)", "png"),
     ("insitu_dotprompt_runner", "Dotprompt Guide: Live Variables & Prompt Testing (`docs/dotprompt`)", "png"),
@@ -39,6 +43,22 @@ def hide_no_app(page: Page) -> None:
           walk(document.body);
         }"""
     )
+
+def get_clean_workbench_clip(page: Page) -> dict:
+    """Calculates clean crop for main workbench area, excluding left sidebar navigation completely."""
+    # Find the main drawer content area
+    main_area = page.locator("mat-drawer-content, .main-content, main").first
+    if main_area.count():
+        box = main_area.bounding_box()
+        if box:
+            return {
+                "x": max(0, box["x"]),
+                "y": 0,
+                "width": box["width"],
+                "height": 708
+            }
+    # Fallback to standard sidebar offset
+    return {"x": 290, "y": 0, "width": 1212 - 290, "height": 708}
 
 def stage_traces(python_bin: str, base_url: str):
     print("▶ Staging traces through Python runtime...")
@@ -86,9 +106,9 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         def new_page():
             return context.new_page()
 
-        print("\n📸 Capturing Dev UI screenshots...")
+        print("\n📸 Capturing Dev UI screenshots with intelligent DOM-anchored cropping...")
 
-        # 1. Home
+        # 1. Home (Full Dev UI Viewport)
         p_home = new_page()
         p_home.goto(f"{base_url}/", wait_until="domcontentloaded")
         p_home.get_by_text("Flows").first.wait_for(timeout=15000)
@@ -98,7 +118,7 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         print("  ✓ home.png")
         p_home.close()
 
-        # 2. Flow Runner
+        # 2. Flow Runner (Full Viewport)
         p_flow = new_page()
         p_flow.goto(f"{base_url}/flows/menuSuggestionFlow", wait_until="domcontentloaded")
         p_flow.get_by_text("menuSuggestionFlow").first.wait_for(timeout=15000)
@@ -110,7 +130,7 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         print("  ✓ flow-runner.png")
         p_flow.close()
 
-        # 3. Multi-Step Trace Inspect
+        # 3. Multi-Step Trace Inspect (Clean Workbench Crop: Zero Sidebar Debris)
         p_insp = new_page()
         p_insp.goto(f"{base_url}/traces", wait_until="domcontentloaded")
         p_insp.get_by_text("Traces").first.wait_for(timeout=15000)
@@ -119,12 +139,20 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         if complex_row.count():
             complex_row.click()
             p_insp.wait_for_timeout(1000)
+        
+        # Select first model span to show prompt & output
+        model_span = p_insp.locator("text=vertexai/gemini-2.5-flash").first
+        if model_span.count():
+            model_span.click()
+            p_insp.wait_for_timeout(1000)
+
         hide_no_app(p_insp)
-        p_insp.screenshot(path=str(out_dir / "inspect.png"))
-        print("  ✓ inspect.png")
+        workbench_clip = get_clean_workbench_clip(p_insp)
+        p_insp.screenshot(path=str(out_dir / "inspect.png"), clip=workbench_clip)
+        print("  ✓ inspect.png (clean workbench)")
         p_insp.close()
 
-        # 4. Runstep (Clean post-crop of trace tree with zero right panel debris)
+        # 4. Runstep (Intelligent Tree-Anchored Crop: Full Header Block + 0 Border Bleed)
         p_step = new_page()
         p_step.goto(f"{base_url}/traces", wait_until="domcontentloaded")
         p_step.get_by_text("Traces").first.wait_for(timeout=15000)
@@ -134,9 +162,11 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
             q_row.click()
             p_step.wait_for_timeout(1000)
         hide_no_app(p_step)
-        clip_tree = {"x": 272, "y": 74, "width": 302, "height": 250}
+
+        # Precise anchor on trace tree block
+        clip_tree = {"x": 270, "y": 47, "width": 304, "height": 220}
         p_step.screenshot(path=str(out_dir / "runstep.png"), clip=clip_tree)
-        print("  ✓ runstep.png (clean post-crop)")
+        print("  ✓ runstep.png (anchored tree block)")
         p_step.close()
 
         # 5. Model Runner
@@ -254,61 +284,31 @@ def capture_insitu_views(docsite_url: str, insitu_dir: Path):
     with sync_playwright() as p:
         browser = p.chromium.launch()
 
-        # 1. Tool Loop in Docsite Context
-        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
-        page.goto(f"{docsite_url}/docs/tool-calling/", wait_until="networkidle")
-        time.sleep(1)
-        img = page.locator("img[alt*='Inspecting tool calling']")
-        if img.count():
-            img.scroll_into_view_if_needed()
-            time.sleep(0.5)
-            page.evaluate("window.scrollBy(0, -120)")
-            time.sleep(0.5)
-            page.screenshot(path=str(insitu_dir / "insitu_tool_calling_loop.png"))
-            print("  ✓ insitu_tool_calling_loop.png")
-        page.close()
+        def capture_doc_section(url_path: str, img_selector: str, out_name: str):
+            page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
+            page.goto(f"{docsite_url}{url_path}", wait_until="networkidle")
+            time.sleep(1)
+            img = page.locator(img_selector).first
+            if img.count():
+                img.scroll_into_view_if_needed()
+                time.sleep(0.5)
+                page.evaluate("window.scrollBy(0, -120)")
+                time.sleep(0.5)
+                page.screenshot(path=str(insitu_dir / out_name))
+                print(f"  ✓ {out_name}")
+            page.close()
 
-        # 2. Standalone Tool Runner in Docsite Context
-        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
-        page.goto(f"{docsite_url}/docs/tool-calling/", wait_until="networkidle")
-        time.sleep(1)
-        img = page.locator("img[alt*='Standalone tool runner']")
-        if img.count():
-            img.scroll_into_view_if_needed()
-            time.sleep(0.5)
-            page.evaluate("window.scrollBy(0, -120)")
-            time.sleep(0.5)
-            page.screenshot(path=str(insitu_dir / "insitu_tool_runner_standalone.png"))
-            print("  ✓ insitu_tool_runner_standalone.png")
-        page.close()
+        # Batch 1 in-situ
+        capture_doc_section("/docs/devtools/", "img[src*='genkit_dev_ui_home'], img[alt*='Developer UI']", "insitu_pr327_devtools.png")
+        capture_doc_section("/docs/flows/", "img[src*='devui-flows'], img[alt*='Flow']", "insitu_pr327_flows_runner.png")
+        capture_doc_section("/docs/flows/", "img[src*='devui-inspect'], img[alt*='inspect']", "insitu_pr327_flows_inspect.png")
+        capture_doc_section("/docs/flows/", "img[src*='devui-runstep'], img[alt*='runstep']", "insitu_pr327_flows_runstep.png")
 
-        # 3. Dotprompt Runner in Docsite Context
-        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
-        page.goto(f"{docsite_url}/docs/dotprompt/", wait_until="networkidle")
-        time.sleep(1)
-        img = page.locator("img[alt*='Dotprompt runner']")
-        if img.count():
-            img.scroll_into_view_if_needed()
-            time.sleep(0.5)
-            page.evaluate("window.scrollBy(0, -120)")
-            time.sleep(0.5)
-            page.screenshot(path=str(insitu_dir / "insitu_dotprompt_runner.png"))
-            print("  ✓ insitu_dotprompt_runner.png")
-        page.close()
-
-        # 4. Evaluation Results in Docsite Context
-        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=2, color_scheme="dark")
-        page.goto(f"{docsite_url}/docs/evaluation/", wait_until="networkidle")
-        time.sleep(1)
-        img = page.locator("img[alt*='Evaluation run results']")
-        if img.count():
-            img.scroll_into_view_if_needed()
-            time.sleep(0.5)
-            page.evaluate("window.scrollBy(0, -120)")
-            time.sleep(0.5)
-            page.screenshot(path=str(insitu_dir / "insitu_evaluation_results.png"))
-            print("  ✓ insitu_evaluation_results.png")
-        page.close()
+        # Batch 2 in-situ
+        capture_doc_section("/docs/tool-calling/", "img[alt*='Inspecting tool calling']", "insitu_tool_calling_loop.png")
+        capture_doc_section("/docs/tool-calling/", "img[alt*='Standalone tool runner']", "insitu_tool_runner_standalone.png")
+        capture_doc_section("/docs/dotprompt/", "img[alt*='Dotprompt runner']", "insitu_dotprompt_runner.png")
+        capture_doc_section("/docs/evaluation/", "img[alt*='Evaluation run results']", "insitu_evaluation_results.png")
 
         browser.close()
 
@@ -384,13 +384,14 @@ def build_compare_html(out_dir: Path):
 """
 
     for card_id, desc, fmt in INSITU_SHOTS:
+        img_path = f"in_situ/{card_id}.png"
         html += f"""
 <section id="{card_id}">
   <h3><span>{desc}</span> <span class="badge new">1440x900 Laptop View</span></h3>
   <div class="single-frame">
     <figure>
       <figcaption>Full Browser Viewport on Docsite</figcaption>
-      <img src="in_situ/{card_id}.png" alt="{card_id}" />
+      <img src="{img_path}" alt="{card_id}" />
     </figure>
   </div>
 </section>
