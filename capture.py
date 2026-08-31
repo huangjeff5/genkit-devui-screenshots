@@ -124,7 +124,7 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
         print("  ✓ inspect.png")
         p_insp.close()
 
-        # 4. Runstep
+        # 4. Runstep (Clean post-crop of trace tree with zero right panel debris)
         p_step = new_page()
         p_step.goto(f"{base_url}/traces", wait_until="domcontentloaded")
         p_step.get_by_text("Traces").first.wait_for(timeout=15000)
@@ -134,8 +134,9 @@ def run_capture(base_url: str, docsite_url: str, out_dir: Path, python_bin: str)
             q_row.click()
             p_step.wait_for_timeout(1000)
         hide_no_app(p_step)
-        p_step.screenshot(path=str(out_dir / "runstep.png"))
-        print("  ✓ runstep.png")
+        clip_tree = {"x": 272, "y": 74, "width": 302, "height": 250}
+        p_step.screenshot(path=str(out_dir / "runstep.png"), clip=clip_tree)
+        print("  ✓ runstep.png (clean post-crop)")
         p_step.close()
 
         # 5. Model Runner
@@ -261,7 +262,6 @@ def capture_insitu_views(docsite_url: str, insitu_dir: Path):
         if img.count():
             img.scroll_into_view_if_needed()
             time.sleep(0.5)
-            # Scroll up slightly so surrounding context is visible
             page.evaluate("window.scrollBy(0, -120)")
             time.sleep(0.5)
             page.screenshot(path=str(insitu_dir / "insitu_tool_calling_loop.png"))
