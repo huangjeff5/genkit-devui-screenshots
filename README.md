@@ -46,12 +46,10 @@ The shots look good except for "inspect". Please retake that shot with the getDi
 
 ---
 
-## Media decision rubric
+## Format decision
 
-| Format | When to use | Examples |
-| :--- | :--- | :--- |
-| **GIF** (3–8s loop, 12 fps, Lanczos) | Real-time streaming, pause/resume interrupts, parameter slider testing, or expandable trace trees. | Interactive flow run tour, prompt variable resolution, multi-agent trace tree. |
-| **Screenshot** (PNG, 2x Retina) | Deep structural JSON, schema forms, multi-span latency waterfalls, or evaluation scoreboards. | Tool runner input form, tool trace waterfall, evaluation result matrix. |
+- **GIF** (3–8s loop, 12 fps, Lanczos): real-time streaming, pause/resume interrupts, parameter slider testing, or expandable trace trees. Examples: interactive flow tour, live prompt variable resolution, multi-agent trace tree.
+- **Screenshot** (PNG, 2x Retina): structural JSON, schema forms, multi-span latency waterfalls, or evaluation scoreboards. Examples: tool runner input form, tool trace waterfall, evaluation result matrix.
 
 ---
 

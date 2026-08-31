@@ -53,14 +53,12 @@ open ~/Desktop/genkit-docsite-shots/proposed/compare.html
 
 ## Review rubric (before showing the user)
 
-Open the pixels directly. For every shot, check:
+Open the pixels directly. Reject and retake any shot that fails any of these:
 
-| # | Check | Fail if |
-| --- | --- | --- |
-| 1 | **Beat** | A stranger cannot understand the point in two seconds without reading a caption. |
-| 2 | **Junk** | `No app detected` text, error toast overlays, empty tabs, or messy logs. |
-| 3 | **Crop** | Frame is not standard 1212x708 dark-mode or is blurry. |
-| 4 | **Vs Old** | Proposed capture has lower information density than what is currently live. |
+- **Beat**: Fail if a stranger cannot understand the single point in two seconds without reading a caption.
+- **Junk**: Fail if there is `No app detected` text, error toast overlays, empty tabs, or raw stack traces.
+- **Crop**: Fail if the frame is not standard 1212x708 dark-mode or is blurry.
+- **Vs Old**: Fail if the proposed capture has lower information density or is harder to scan than what is currently live.
 
 Any fail is a retake. Do not show failed shots.
 
